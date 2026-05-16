@@ -1,12 +1,9 @@
 const prisma = require("../config/prisma");
 
-/*
-|--------------------------------------------------------------------------
-| CARD 1 → TOTAL RFID TAGS
-|--------------------------------------------------------------------------
-| Counts all valid slno entries
-|--------------------------------------------------------------------------
-*/
+
+// =========================================
+// TOTAL RFID TAGS
+// =========================================
 
 const getTotalRFIDTags = async (
   req,
@@ -52,20 +49,9 @@ const getTotalRFIDTags = async (
 };
 
 
-/*
-|--------------------------------------------------------------------------
-| CARD 2 → DISTRIBUTED TAGS
-|--------------------------------------------------------------------------
-| Logic:
-| 1 phone number = 2 RFID serial numbers distributed
-|
-| Example:
-| 8123282676 → slno1 + slno2
-|
-| So:
-| distributedTags = assigned RFID rows / 2
-|--------------------------------------------------------------------------
-*/
+// =========================================
+// DISTRIBUTED RFID TAGS
+// =========================================
 
 const getDistributedTags = async (
   req,
@@ -74,28 +60,12 @@ const getDistributedTags = async (
 
   try {
 
-    /*
-    |--------------------------------------------------------------------------
-    | COUNT ALL RFID TAGS
-    | WHERE phoneNumber EXISTS
-    |--------------------------------------------------------------------------
-    */
-
-    const distributedTags =
+    const distributedRows =
       await prisma.RFIDMapping.count({
         where: {
-          AND: [
-            {
-              phoneNumber: {
-                not: null,
-              },
-            },
-            {
-              phoneNumber: {
-                not: "",
-              },
-            },
-          ],
+          phoneNumber: {
+            not: null,
+          },
         },
       });
 
@@ -105,7 +75,8 @@ const getDistributedTags = async (
         "Distributed RFID tags fetched successfully",
 
       data: {
-        distributedTags,
+        distributedTags:
+          distributedRows,
       },
     });
 
@@ -127,7 +98,92 @@ const getDistributedTags = async (
 };
 
 
+// =========================================
+// TAGS DISTRIBUTED BY WORKERS
+// =========================================
+
+const getTagsDistributedByWorkers =
+  async (req, res) => {
+
+    try {
+
+      // get all workers
+      const workers =
+        await prisma.Moderator.findMany({
+          select: {
+            username: true,
+          },
+          orderBy: {
+            username: "asc",
+          },
+        });
+
+      // get tracking logs
+      const trackingLogs =
+        await prisma.TrackingLog.groupBy({
+          by: ["workerId"],
+
+          _count: {
+            workerId: true,
+          },
+        });
+
+      // map counts
+      const workerDistribution =
+        workers.map((worker) => {
+
+          const matchedWorker =
+            trackingLogs.find(
+              (log) =>
+                log.workerId ===
+                worker.username
+            );
+
+          const distributedCount =
+            matchedWorker
+              ? matchedWorker._count
+                  .workerId * 2
+              : 0;
+
+          return {
+            worker:
+              worker.username,
+
+            distributedTags:
+              distributedCount,
+          };
+
+        });
+
+      return res.status(200).json({
+        success: true,
+
+        message:
+          "Worker distribution fetched successfully",
+
+        data: workerDistribution,
+      });
+
+    } catch (error) {
+
+      console.error(
+        "Worker Distribution Error:",
+        error
+      );
+
+      return res.status(500).json({
+        success: false,
+        message:
+          "Internal server error",
+      });
+
+    }
+
+  };
+
+
 module.exports = {
   getTotalRFIDTags,
   getDistributedTags,
+  getTagsDistributedByWorkers,
 };

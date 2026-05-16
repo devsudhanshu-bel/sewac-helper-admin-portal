@@ -2,36 +2,48 @@ const express = require("express");
 
 const router = express.Router();
 
-const dashboardController =
-  require("../controllers/dashboardController");
-
-const verifyAdminToken =
+const verifyToken =
   require("../middleware/authMiddleware");
 
-
-/*
-|--------------------------------------------------------------------------
-| CARD 1 → TOTAL RFID TAGS
-|--------------------------------------------------------------------------
-*/
-
-router.get(
-  "/total-rfid-tags",
-  verifyAdminToken,
-  dashboardController.getTotalRFIDTags
+const {
+  getTotalRFIDTags,
+  getDistributedTags,
+  getTagsDistributedByWorkers,
+} = require(
+  "../controllers/dashboardController"
 );
 
 
-/*
-|--------------------------------------------------------------------------
-| CARD 2 → DISTRIBUTED TAGS
-|--------------------------------------------------------------------------
-*/
+// =========================================
+// TOTAL RFID TAGS
+// =========================================
+
+router.get(
+  "/total-rfid-tags",
+  verifyToken,
+  getTotalRFIDTags
+);
+
+
+// =========================================
+// DISTRIBUTED TAGS
+// =========================================
 
 router.get(
   "/distributed-tags",
-  verifyAdminToken,
-  dashboardController.getDistributedTags
+  verifyToken,
+  getDistributedTags
+);
+
+
+// =========================================
+// TAGS DISTRIBUTED BY WORKERS
+// =========================================
+
+router.get(
+  "/worker-distribution",
+  verifyToken,
+  getTagsDistributedByWorkers
 );
 
 
