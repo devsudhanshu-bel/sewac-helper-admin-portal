@@ -8,9 +8,10 @@ const dashboardController =
 const verifyAdminToken =
   require("../middleware/authMiddleware");
 
+
 /*
 |--------------------------------------------------------------------------
-| TOTAL RFID TAGS CARD
+| CARD 1 → TOTAL RFID TAGS
 |--------------------------------------------------------------------------
 */
 
@@ -19,5 +20,19 @@ router.get(
   verifyAdminToken,
   dashboardController.getTotalRFIDTags
 );
+
+
+/*
+|--------------------------------------------------------------------------
+| CARD 2 → DISTRIBUTED TAGS
+|--------------------------------------------------------------------------
+*/
+
+router.get(
+  "/distributed-tags",
+  verifyAdminToken,
+  dashboardController.getDistributedTags
+);
+
 
 module.exports = router;
