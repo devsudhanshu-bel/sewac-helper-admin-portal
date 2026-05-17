@@ -118,44 +118,54 @@ const getTagsDistributedByWorkers =
           },
         });
 
-      // get tracking logs
-      const trackingLogs =
-        await prisma.TrackingLog.groupBy({
-          by: ["workerId"],
+// get only VALID tracking rows
+const trackingLogs =
+  await prisma.TrackingLog.findMany({
+    where: {
+      workerId: {
+        not: null,
+      },
 
-          _count: {
-            workerId: true,
-          },
-        });
+      drySlno: {
+        not: null,
+      },
 
-      // map counts
-      const workerDistribution =
-        workers.map((worker) => {
+      wetSlno: {
+        not: null,
+      },
+    },
 
-          const matchedWorker =
-            trackingLogs.find(
-              (log) =>
-                log.workerId ===
-                worker.username
-            );
+    select: {
+      workerId: true,
+    },
+  });
 
-          const distributedCount =
-            matchedWorker
-              ? matchedWorker._count
-                  .workerId * 2
-              : 0;
+// create worker map
+const workerMap = {};
 
-          return {
-            worker:
-              worker.username,
+trackingLogs.forEach((log) => {
 
-            distributedTags:
-              distributedCount,
-          };
+  const worker = log.workerId;
 
-        });
+  if (!workerMap[worker]) {
+    workerMap[worker] = 0;
+  }
 
-      return res.status(200).json({
+  // 1 row = 2 RFID tags
+  workerMap[worker] += 2;
+
+});
+
+// map workers
+const workerDistribution =
+  workers.map((worker) => ({
+
+    worker: worker.username,
+
+    distributedTags:
+      workerMap[worker.username] || 0,
+
+  }));      return res.status(200).json({
         success: true,
 
         message:

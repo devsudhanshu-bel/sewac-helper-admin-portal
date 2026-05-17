@@ -8,48 +8,68 @@ datasource db {
 }
 
 model Moderator {
-  id        String  @id
+  id        Int      @id
   username  String?
   password  String?
   role      String?
-  createdAt String?
+  createdAt DateTime?
+
+  @@map("Moderator")
 }
 
 model RFIDMapping {
+  id          Int      @id
   slno        String?
   phoneNumber String?
   rfid        String?
   wasteType   String?
-  createdAt   String?
-  id          String  @id
-}
+  createdAt   DateTime?
 
-/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
-model survey_attribute_specific {
-  city                String?
-  ward                String?
-  area                String?
-  wasteGeneratorTypes String?
-  houseNumber         String?
-  floorNumber         String?
-  householdType       String?
-  personName          String?
-  contactNumber       String?
-  numberOfPeople      String?
-  buildingPhoto       String?
-
-  @@ignore
+  @@map("RFIDMapping")
 }
 
 model TrackingLog {
-  id          String  @id
-  workerId    String?
-  slno        String?
-  citizenName String?
-  phoneNumber String?
-  status      String?
-  remarks     String?
-  createdAt   String?
-  drySlno     String?
-  wetSlno     String?
+  id            Int      @id
+  workerId      String?
+  slno          String?
+  citizenName   String?
+  phoneNumber   String?
+  remarks       String?
+  createdAt     DateTime?
+  address       String?
+  buildingNo    String?
+  drySlno       String?
+  floorNo       String?
+  latitude      Float?
+  longitude     Float?
+  photoUrl      String?
+  updatedAt     DateTime?
+  wetSlno       String?
+  status        String?
+
+  @@map("TrackingLog")
+}
+
+model MasterCitizenData {
+  id                   Int      @id
+  phoneNumber          String?
+  city                 String?
+  ward                 String?
+  area                 String?
+  wasteGeneratorTypes  String?
+  houseNumber          String?
+  floorNumber          String?
+  householdType        String?
+  personName           String?
+  contactNumber        String?
+  numberOfPeople       String?
+  buildingPhoto        String?
+  createdAt            DateTime?
+  updatedAt            DateTime?
+  dryRFID              String?
+  drySlno              String?
+  wetRFID              String?
+  wetSlno              String?
+
+  @@map("master_citizen_data")
 }
