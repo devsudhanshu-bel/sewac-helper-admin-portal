@@ -42,14 +42,14 @@ model survey_attribute_specific {
 }
 
 model TrackingLog {
-  id           String  @id
-  workerId     String?
-  slno         String?
-  citizenName  String?
-  phoneNumber  String?
-  status       String?
-  remarks      String?
-  createdAt    String?
-  drySlno      String?
-  wetSlno      String?
+  id          String  @id
+  workerId    String?
+  slno        String?
+  citizenName String?
+  phoneNumber String?
+  status      String?
+  remarks     String?
+  createdAt   String?
+  drySlno     String?
+  wetSlno     String?
 }
