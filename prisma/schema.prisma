@@ -8,79 +8,23 @@ datasource db {
 }
 
 model Moderator {
-  id        Int      @id @default(autoincrement())
-  username  String   @unique
-  password  String
-  role      String   @default("MODERATOR")
-  createdAt DateTime @default(now())
+  id        String  @id
+  username  String?
+  password  String?
+  role      String?
+  createdAt String?
 }
 
 model RFIDMapping {
-  slno        String
-  phoneNumber String?
-  rfid        String     @unique
-  wasteType   WasteType?
-  createdAt   DateTime   @default(now())
-  id          Int        @id @default(autoincrement())
-
-  @@unique([slno, wasteType])
-}
-
-model Remark {
-  id        Int      @id @default(autoincrement())
-  remark    String
-  createdAt DateTime @default(now())
-}
-
-model TrackingLog {
-  id          Int      @id @default(autoincrement())
-  workerId    String
   slno        String?
-  citizenName String?
   phoneNumber String?
-  status      String   @default("FOUND")
-  remarks     String?
-  createdAt   DateTime @default(now())
-  drySlno     String?
-  wetSlno     String?
+  rfid        String?
+  wasteType   String?
+  createdAt   String?
+  id          String  @id
 }
 
-model master_citizen_data {
-  id                  Int      @id @default(autoincrement())
-  phoneNumber         String   @unique
-  city                String?
-  ward                String?
-  area                String?
-  wasteGeneratorTypes String?
-  houseNumber         String?
-  floorNumber         String?
-  householdType       String?
-  personName          String?
-  contactNumber       String?
-  numberOfPeople      String?
-  buildingPhoto       String?
-  createdAt           DateTime @default(now())
-  updatedAt           DateTime
-  dryRFID             String?
-  drySlno             String?
-  wetRFID             String?
-  wetSlno             String?
-}
-
-model master_worker_data {
-  id          String    @id @db.VarChar(50)
-  workerName  String    @db.VarChar(255)
-  phoneNumber String    @unique @db.VarChar(20)
-  role        String    @db.VarChar(100)
-  createdAt   DateTime? @default(now()) @db.Timestamp(6)
-}
-
-model reverse_rfid_mapping {
-  idx   Int     @id
-  sl_no String  @db.Char(8)
-  rfid  String? @unique @db.VarChar(48)
-}
-
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
 model survey_attribute_specific {
   city                String?
   ward                String?
@@ -93,10 +37,6 @@ model survey_attribute_specific {
   contactNumber       String?
   numberOfPeople      String?
   buildingPhoto       String?
-  id                  Int     @id @default(autoincrement())
-}
 
-enum WasteType {
-  DRY
-  WET
+  @@ignore
 }
