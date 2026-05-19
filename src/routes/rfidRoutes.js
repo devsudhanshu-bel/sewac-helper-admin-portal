@@ -4,24 +4,18 @@ const router = express.Router();
 
 const {
   getAllRFIDTags,
-} = require(
-  "../controllers/rfidController"
-);
+} = require("../controllers/rfidController");
 
-const verifyToken = require(
-  "../middleware/authMiddleware"
-);
 
 
 // =========================================
-// RFID TAGS LIST
+// GET ALL RFID TAGS
 // =========================================
-
 router.get(
   "/all",
-  verifyToken,
   getAllRFIDTags
 );
+
 
 
 module.exports = router;

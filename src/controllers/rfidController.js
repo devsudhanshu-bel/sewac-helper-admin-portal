@@ -9,9 +9,7 @@ const getAllRFIDTags = async (req, res) => {
 
   try {
 
-    // =========================================
-    // STEP 1 → FETCH ALL RFID TAGS
-    // =========================================
+    // FETCH RFID MASTER DATA
     const rfids = await prisma.RFIDMapping.findMany({
 
       orderBy: {
@@ -20,51 +18,43 @@ const getAllRFIDTags = async (req, res) => {
 
     });
 
-
-
-    // =========================================
-    // STEP 2 → FETCH TRACKING LOGS
-    // =========================================
+    // FETCH TRACKING LOGS
     const logs = await prisma.TrackingLog.findMany();
 
 
 
-    // =========================================
-    // STEP 3 → FORMAT RFID DATA
-    // =========================================
+    // FORMAT DATA
     const formattedData = rfids.map((rfid) => {
 
-      // =========================================
-      // DRY RFID MATCH
-      // RFIDMapping.slno ↔ TrackingLog.drySlno
-      // =========================================
+      // DRY MATCH
       const dryMatch = logs.find(
 
         (log) =>
+
           log.drySlno &&
-          log.drySlno === rfid.slno
+
+          String(log.drySlno).padStart(8, "0") ===
+          String(rfid.slno).padStart(8, "0")
 
       );
 
 
 
-      // =========================================
-      // WET RFID MATCH
-      // RFIDMapping.slno ↔ TrackingLog.wetSlno
-      // =========================================
+      // WET MATCH
       const wetMatch = logs.find(
 
         (log) =>
+
           log.wetSlno &&
-          log.wetSlno === rfid.slno
+
+          String(log.wetSlno).padStart(8, "0") ===
+          String(rfid.slno).padStart(8, "0")
 
       );
 
 
 
-      // =========================================
-      // DRY RFID FOUND
-      // =========================================
+      // DRY RFID
       if (dryMatch) {
 
         return {
@@ -86,9 +76,7 @@ const getAllRFIDTags = async (req, res) => {
 
 
 
-      // =========================================
-      // WET RFID FOUND
-      // =========================================
+      // WET RFID
       if (wetMatch) {
 
         return {
@@ -110,9 +98,7 @@ const getAllRFIDTags = async (req, res) => {
 
 
 
-      // =========================================
       // UNMAPPED RFID
-      // =========================================
       return {
 
         slno: rfid.slno,
@@ -131,9 +117,6 @@ const getAllRFIDTags = async (req, res) => {
 
 
 
-    // =========================================
-    // RESPONSE
-    // =========================================
     return res.status(200).json({
 
       success: true,
