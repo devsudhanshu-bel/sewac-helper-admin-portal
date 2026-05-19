@@ -1,80 +1,79 @@
 const prisma = require("../config/prisma");
 
-
-// =========================================
-// GET ALL RFID TAGS
-// =========================================
-
-const getAllRFIDTags = async (
-  req,
-  res
-) => {
-
+const getAllRFIDTags = async (req, res) => {
   try {
 
-    const rfidTags =
-      await prisma.RFIDMapping.findMany({
+    // STEP 1 → Fetch all RFID master tags
+    const rfids = await prisma.RFIDMapping.findMany({
+      orderBy: {
+        slno: "asc",
+      },
+    });
 
-        orderBy: {
-          slno: "asc",
-        },
+    // STEP 2 → Fetch all tracking logs
+    const logs = await prisma.TrackingLog.findMany();
 
-      });
+    // STEP 3 → Merge mapping info
+    const formattedData = rfids.map((rfid) => {
 
-    // format response
-    const formattedData =
-      rfidTags.map((tag) => ({
+      // DRY MATCH
+      const dryMatch = logs.find(
+        (log) => log.slno === rfid.slno
+      );
 
-        slno: tag.slno,
+      // WET MATCH
+      const wetMatch = logs.find(
+        (log) => log.wetSlno === rfid.slno
+      );
 
-        rfid: tag.rfid,
+      // DRY RFID FOUND
+      if (dryMatch) {
+        return {
+          slno: rfid.slno,
+          rfid: rfid.rfid,
+          phoneNumber: dryMatch.phoneNumber || "NU",
+          wasteType: "Dry Waste",
+          status: "MAPPED",
+        };
+      }
 
-        phoneNumber:
-          tag.phoneNumber || "NU",
+      // WET RFID FOUND
+      if (wetMatch) {
+        return {
+          slno: rfid.slno,
+          rfid: rfid.rfid,
+          phoneNumber: wetMatch.phoneNumber || "NU",
+          wasteType: "Wet Waste",
+          status: "MAPPED",
+        };
+      }
 
-        wasteType:
-          tag.wasteType || "NU",
-
-        status:
-          tag.phoneNumber &&
-          tag.wasteType
-            ? "MAPPED"
-            : "UNMAPPED",
-
-      }));
-
+      // UNMAPPED RFID
+      return {
+        slno: rfid.slno,
+        rfid: rfid.rfid,
+        phoneNumber: "NU",
+        wasteType: "NU",
+        status: "UNMAPPED",
+      };
+    });
 
     return res.status(200).json({
-
       success: true,
-
-      message:
-        "RFID tags fetched successfully",
-
+      message: "RFID tags fetched successfully",
       data: formattedData,
-
     });
 
   } catch (error) {
 
-    console.error(
-      "RFID Fetch Error:",
-      error
-    );
+    console.error("RFID Fetch Error:", error);
 
     return res.status(500).json({
-
       success: false,
-
-      message:
-        "Internal server error",
-
+      message: "Internal server error",
     });
-
   }
-
 };
-
 
 module.exports = {
   getAllRFIDTags,
