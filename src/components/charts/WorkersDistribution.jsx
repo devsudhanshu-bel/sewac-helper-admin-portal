@@ -44,7 +44,7 @@ const WorkersDistribution = () => {
           // TOKEN
           // =====================================
           const token =
-            localStorage.getItem(
+            sessionStorage.getItem(
               "token"
             );
 

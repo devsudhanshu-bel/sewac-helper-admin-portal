@@ -13,16 +13,11 @@ import {
 
 import gsap from "gsap";
 
-
-
 const StatsCards = () => {
 
   const cardsRef = useRef([]);
 
   const progressRef = useRef([]);
-
-
-
 
   // =========================================
   // STATS DATA
@@ -53,7 +48,8 @@ const StatsCards = () => {
 
         value: 0,
 
-        subtitle: "Live distributed count",
+        subtitle:
+          "Live distributed count",
 
         icon: CheckCircle2,
 
@@ -64,7 +60,7 @@ const StatsCards = () => {
           "bg-purple-500",
 
         progressWidth:
-          "74%",
+          "0%",
       },
 
       {
@@ -72,7 +68,8 @@ const StatsCards = () => {
 
         value: 0,
 
-        subtitle: "Remaining RFID tags",
+        subtitle:
+          "Remaining RFID tags",
 
         icon: ScanLine,
 
@@ -83,7 +80,7 @@ const StatsCards = () => {
           "bg-violet-500",
 
         progressWidth:
-          "25%",
+          "0%",
       },
 
       {
@@ -91,7 +88,8 @@ const StatsCards = () => {
 
         value: 15,
 
-        subtitle: "100% active",
+        subtitle:
+          "100% active",
 
         icon: Users,
 
@@ -106,15 +104,11 @@ const StatsCards = () => {
       },
     ]);
 
-
-
   // =========================================
   // COUNTS
   // =========================================
   const [counts, setCounts] =
     useState([0, 0, 0, 0]);
-
-
 
   // =========================================
   // FETCH DASHBOARD DATA
@@ -130,11 +124,9 @@ const StatsCards = () => {
           // TOKEN
           // =====================================
           const token =
-            localStorage.getItem(
+            sessionStorage.getItem(
               "token"
             );
-
-
 
           if (!token) {
 
@@ -145,10 +137,8 @@ const StatsCards = () => {
             return;
           }
 
-
-
           // =====================================
-          // FETCH BOTH APIs
+          // FETCH BOTH APIS
           // =====================================
           const [
             totalResponse,
@@ -181,7 +171,20 @@ const StatsCards = () => {
             ),
           ]);
 
+          // =====================================
+          // RESPONSE CHECK
+          // =====================================
+          if (
+            !totalResponse.ok ||
+            !distributedResponse.ok
+          ) {
 
+            console.error(
+              "API request failed"
+            );
+
+            return;
+          }
 
           // =====================================
           // JSON DATA
@@ -192,9 +195,6 @@ const StatsCards = () => {
           const distributedData =
             await distributedResponse.json();
 
-
-
-
           console.log(
             "TOTAL RFID:",
             totalData
@@ -204,8 +204,6 @@ const StatsCards = () => {
             "DISTRIBUTED RFID:",
             distributedData
           );
-
-
 
           // =====================================
           // VALUES
@@ -218,38 +216,30 @@ const StatsCards = () => {
             distributedData?.data
               ?.distributedTags || 0;
 
-
-
           const remainingRFID =
             totalRFID -
             distributedRFID;
-
-
 
           // =====================================
           // PERCENTAGES
           // =====================================
           const distributedPercentage =
             totalRFID > 0
-              ? (
+              ? Math.round(
                   (distributedRFID /
                     totalRFID) *
-                  100
-                ).toFixed(0)
+                    100
+                )
               : 0;
-
-
 
           const remainingPercentage =
             totalRFID > 0
-              ? (
+              ? Math.round(
                   (remainingRFID /
                     totalRFID) *
-                  100
-                ).toFixed(0)
+                    100
+                )
               : 0;
-
-
 
           // =====================================
           // UPDATE STATE
@@ -351,14 +341,9 @@ const StatsCards = () => {
         }
       };
 
-
-
     fetchDashboardData();
 
   }, []);
-
-
-
 
   // =========================================
   // GSAP ANIMATION
@@ -398,8 +383,6 @@ const StatsCards = () => {
       }
     );
 
-
-
     // PROGRESS BAR
     progressRef.current.forEach(
       (bar, index) => {
@@ -431,8 +414,6 @@ const StatsCards = () => {
 
       }
     );
-
-
 
     // COUNTER
     statsData.forEach(
@@ -480,9 +461,6 @@ const StatsCards = () => {
 
   }, [statsData]);
 
-
-
-
   return (
 
     <div className="grid grid-cols-4 gap-4 mb-5">
@@ -504,26 +482,24 @@ const StatsCards = () => {
                 ] = el)
               }
 
-              className="bg-white border border-purple-100 rounded-[22px] p-4 shadow-sm hover:shadow-lg hover:-translate-y-[3px] hover:scale-[1.015] transition-all duration-300 will-change-transform transform-gpu"
+              className="bg-white border border-purple-100 rounded-[22px] px-5 py-4 shadow-[0_10px_30px_rgba(15,23,42,0.08)] hover:shadow-[0_14px_40px_rgba(15,23,42,0.12)] hover:-translate-y-[2px] transition-all duration-300"
             >
 
-              {/* TOP */}
-              <div className="flex items-start justify-between">
+              {/* CONTENT */}
+              <div className="flex items-center justify-between">
 
                 {/* LEFT */}
                 <div>
 
                   {/* TITLE */}
-                  <p className="text-[#7d7d99] text-[12px] font-semibold">
+                  <p className="text-[#7d7d99] text-[13px] font-semibold">
 
                     {card.title}
 
                   </p>
 
-
-
                   {/* NUMBER */}
-                  <h2 className="text-[28px] font-bold text-[#1f1f3d] mt-2 leading-none">
+                  <h2 className="text-[30px] font-black text-[#1f1f3d] mt-1 leading-none">
 
                     {card.title ===
                     "Active Workers"
@@ -534,10 +510,8 @@ const StatsCards = () => {
 
                   </h2>
 
-
-
                   {/* SUBTITLE */}
-                  <p className="text-[#9a9ab3] text-[11px] font-medium mt-2.5">
+                  <p className="text-[#9a9ab3] text-[11px] font-medium mt-2">
 
                     {card.subtitle}
 
@@ -545,15 +519,13 @@ const StatsCards = () => {
 
                 </div>
 
-
-
                 {/* ICON */}
                 <div
-                  className={`w-12 h-12 rounded-2xl bg-gradient-to-br ${card.iconBg} flex items-center justify-center shadow-sm`}
+                  className={`w-14 h-14 rounded-[18px] bg-gradient-to-br ${card.iconBg} flex items-center justify-center shadow-lg`}
                 >
 
                   <Icon
-                    size={20}
+                    size={24}
                     className="text-white"
                   />
 
@@ -561,10 +533,8 @@ const StatsCards = () => {
 
               </div>
 
-
-
               {/* PROGRESS */}
-              <div className="w-full h-[4px] rounded-full bg-[#ece8f6] mt-4 overflow-hidden">
+              <div className="w-full h-[5px] rounded-full bg-[#ece8f6] mt-4 overflow-hidden">
 
                 <div
                   ref={(el) =>
@@ -584,7 +554,6 @@ const StatsCards = () => {
       )}
 
     </div>
-
   );
 };
 

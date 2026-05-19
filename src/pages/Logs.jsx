@@ -19,7 +19,7 @@ import {
 
 
 // =========================================
-// DUMMY DATA
+// DUMMY TABLE DATA
 // =========================================
 const logsData = [
   {
@@ -147,6 +147,19 @@ const Logs = () => {
 
 
   // =========================================
+  // API STATS
+  // =========================================
+  const [summary, setSummary] =
+    useState({
+      totalLogs: 0,
+      todayLogs: 0,
+      activeWorkers: 0,
+      latestLog: "-",
+    });
+
+
+
+  // =========================================
   // FILTERS
   // =========================================
   const [workerFilter, setWorkerFilter] =
@@ -164,6 +177,80 @@ const Logs = () => {
 
   const [currentPage, setCurrentPage] =
     useState(1);
+
+
+
+  // =========================================
+  // FETCH SUMMARY
+  // =========================================
+  useEffect(() => {
+
+    const fetchSummary =
+      async () => {
+
+        try {
+
+          const token =
+            sessionStorage.getItem(
+              "token"
+            );
+
+
+
+          const response =
+            await fetch(
+              "https://sewac-helper-admin-portal.onrender.com/api/logs/summary",
+              {
+                method: "GET",
+
+                headers: {
+                  Authorization: `Bearer ${token}`,
+                  "Content-Type":
+                    "application/json",
+                },
+              }
+            );
+
+
+
+          const result =
+            await response.json();
+
+
+
+          console.log(
+            "LOG SUMMARY:",
+            result
+          );
+
+
+
+          if (
+            result?.success
+          ) {
+
+            setSummary(
+              result.data
+            );
+
+          }
+
+        } catch (error) {
+
+          console.error(
+            "Failed to fetch logs summary:",
+            error
+          );
+
+        }
+      };
+
+
+
+    fetchSummary();
+
+  }, []);
+
 
 
 
@@ -287,12 +374,31 @@ const Logs = () => {
 
 
   // =========================================
+  // FORMAT LATEST LOG TIME
+  // =========================================
+  const formattedLatestLog =
+    summary.latestLog
+      ? new Date(
+          summary.latestLog
+        ).toLocaleTimeString(
+          "en-IN",
+          {
+            hour: "2-digit",
+            minute: "2-digit",
+          }
+        )
+      : "-";
+
+
+
+  // =========================================
   // STATS
   // =========================================
   const stats = [
     {
       title: "Total Logs",
-      value: "12,549",
+      value:
+        summary.totalLogs,
       icon: FileText,
       color:
         "from-pink-500 to-fuchsia-500",
@@ -300,7 +406,8 @@ const Logs = () => {
 
     {
       title: "Today's Logs",
-      value: "248",
+      value:
+        summary.todayLogs,
       icon: CalendarDays,
       color:
         "from-emerald-500 to-green-400",
@@ -308,7 +415,8 @@ const Logs = () => {
 
     {
       title: "Active Workers",
-      value: "15",
+      value:
+        summary.activeWorkers,
       icon: Users,
       color:
         "from-orange-400 to-amber-500",
@@ -316,7 +424,8 @@ const Logs = () => {
 
     {
       title: "Latest Log",
-      value: "10:30 AM",
+      value:
+        formattedLatestLog,
       icon: Clock3,
       color:
         "from-violet-500 to-indigo-500",
@@ -397,17 +506,14 @@ const Logs = () => {
               className="relative overflow-hidden rounded-[22px] bg-white border border-slate-100 px-5 py-4 shadow-[0_15px_35px_rgba(15,23,42,0.08)]"
             >
 
-              {/* GLOW */}
               <div
                 className={`absolute top-0 right-0 w-28 h-28 bg-gradient-to-br ${item.color} opacity-10 blur-3xl`}
               />
 
 
 
-              {/* CONTENT ROW */}
               <div className="flex items-center justify-between">
 
-                {/* LEFT CONTENT */}
                 <div>
 
                   <p className="text-slate-500 font-semibold text-[13px]">
@@ -422,7 +528,6 @@ const Logs = () => {
 
 
 
-                {/* RIGHT ICON */}
                 <div
                   className={`w-14 h-14 rounded-[18px] bg-gradient-to-br ${item.color} text-white flex items-center justify-center shadow-lg shrink-0`}
                 >
@@ -435,7 +540,6 @@ const Logs = () => {
 
 
 
-              {/* BOTTOM LINE */}
               <div
                 className={`absolute bottom-0 left-0 h-[3px] w-full bg-gradient-to-r ${item.color}`}
               />
@@ -456,7 +560,6 @@ const Logs = () => {
 
         <div className="flex items-center gap-4">
 
-          {/* WORKER FILTER */}
           <div className="relative">
 
             <select
@@ -506,7 +609,6 @@ const Logs = () => {
 
 
 
-          {/* ACTION FILTER */}
           <div className="relative">
 
             <select

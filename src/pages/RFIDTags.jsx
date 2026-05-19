@@ -8,114 +8,10 @@ import gsap from "gsap";
 
 import {
   Search,
-  Filter,
   CheckCircle2,
   Leaf,
   Trash2,
 } from "lucide-react";
-
-
-
-// =========================================
-// DUMMY DATA
-// =========================================
-const rfidData = [
-  {
-    id: 1,
-    rfid: "RFID1234ABCD",
-    phone: "+91 98765 43210",
-    wasteType: "Wet",
-    status: "Mapped",
-  },
-
-  {
-    id: 2,
-    rfid: "RFID5678EFGH",
-    phone: "+91 91234 56789",
-    wasteType: "Dry",
-    status: "Mapped",
-  },
-
-  {
-    id: 3,
-    rfid: "RFID9101IJKL",
-    phone: "+91 99887 76655",
-    wasteType: "Wet",
-    status: "Unmapped",
-  },
-
-  {
-    id: 4,
-    rfid: "RFID1415MNOP",
-    phone: "+91 87654 32109",
-    wasteType: "Dry",
-    status: "Mapped",
-  },
-
-  {
-    id: 5,
-    rfid: "RFID1617QRST",
-    phone: "+91 93456 78901",
-    wasteType: "Wet",
-    status: "Mapped",
-  },
-
-  {
-    id: 6,
-    rfid: "RFID1819UVWX",
-    phone: "+91 90000 11122",
-    wasteType: "Dry",
-    status: "Unmapped",
-  },
-
-  {
-    id: 7,
-    rfid: "RFID2021YZAB",
-    phone: "+91 95555 66777",
-    wasteType: "Wet",
-    status: "Mapped",
-  },
-
-  {
-    id: 8,
-    rfid: "RFID2223CDEF",
-    phone: "+91 88888 12345",
-    wasteType: "Dry",
-    status: "Mapped",
-  },
-
-  {
-    id: 9,
-    rfid: "RFID2425GHIJ",
-    phone: "+91 77777 88888",
-    wasteType: "Wet",
-    status: "Mapped",
-  },
-
-  {
-    id: 10,
-    rfid: "RFID2627KLMN",
-    phone: "+91 66666 99999",
-    wasteType: "Dry",
-    status: "Mapped",
-  },
-
-  {
-    id: 11,
-    rfid: "RFID2829OPQR",
-    phone: "+91 99999 22222",
-    wasteType: "Wet",
-    status: "Unmapped",
-  },
-
-  {
-    id: 12,
-    rfid: "RFID3031STUV",
-    phone: "+91 88888 44444",
-    wasteType: "Dry",
-    status: "Mapped",
-  },
-];
 
 
 
@@ -127,6 +23,20 @@ const RFIDTags = () => {
   const pageRef = useRef();
 
   const tableRef = useRef();
+
+
+
+  // =========================================
+  // STATES
+  // =========================================
+  const [rfidData, setRfidData] =
+    useState([]);
+
+  const [loading, setLoading] =
+    useState(true);
+
+  const [searchTerm, setSearchTerm] =
+    useState("");
 
 
 
@@ -152,28 +62,139 @@ const RFIDTags = () => {
 
 
   // =========================================
+  // FETCH RFID DATA
+  // =========================================
+  useEffect(() => {
+
+    const fetchRFIDData =
+      async () => {
+
+        try {
+
+          const token =
+            sessionStorage.getItem(
+              "token"
+            );
+
+
+
+          const response =
+            await fetch(
+              "https://sewac-helper-admin-portal.onrender.com/api/rfid/all",
+              {
+                method: "GET",
+
+                headers: {
+                  Authorization: `Bearer ${token}`,
+                  "Content-Type":
+                    "application/json",
+                },
+              }
+            );
+
+
+
+          const data =
+            await response.json();
+
+
+
+          console.log(
+            "RFID DATA:",
+            data
+          );
+
+
+
+          setRfidData(
+            data?.data || []
+          );
+
+        } catch (error) {
+
+          console.error(
+            "Failed to fetch RFID data:",
+            error
+          );
+
+        } finally {
+
+          setLoading(false);
+
+        }
+      };
+
+
+
+    fetchRFIDData();
+
+  }, []);
+
+
+
+
+  // =========================================
   // FILTERED DATA
   // =========================================
   const filteredData =
     rfidData.filter((item) => {
 
+      // NORMALIZED VALUES
+      const normalizedWaste =
+        item?.wasteType
+          ?.trim()
+          ?.toUpperCase();
+
+      const normalizedStatus =
+        item?.status
+          ?.trim()
+          ?.toUpperCase();
+
+      // SEARCH
+      const searchMatch =
+
+        item?.phoneNumber
+          ?.toLowerCase()
+          ?.includes(
+            searchTerm.toLowerCase()
+          ) ||
+
+        item?.rfid
+          ?.toLowerCase()
+          ?.includes(
+            searchTerm.toLowerCase()
+          ) ||
+
+        item?.slno
+          ?.toString()
+          ?.includes(searchTerm);
+
+      // WASTE FILTER
       const wasteMatch =
         wasteFilter === "All"
           ? true
-          : item.wasteType ===
-            wasteFilter;
+          : normalizedWaste?.includes(
+              wasteFilter
+                .trim()
+                .toUpperCase()
+            );
 
+      // STATUS FILTER
       const statusMatch =
         statusFilter === "All"
           ? true
-          : item.status ===
-            statusFilter;
+          : normalizedStatus ===
+            statusFilter
+              .trim()
+              .toUpperCase();
 
       return (
+        searchMatch &&
         wasteMatch &&
         statusMatch
       );
     });
+
 
 
 
@@ -257,7 +278,30 @@ const RFIDTags = () => {
     type
   ) => {
 
-    if (type === "Wet") {
+    // NULL / NU
+    if (
+      !type ||
+      type?.toUpperCase() === "NU" ||
+      type?.toUpperCase() === "NULL"
+    ) {
+
+      return (
+        <div className="inline-flex items-center gap-2 px-4 py-2 rounded-2xl bg-slate-100 text-slate-500 font-semibold text-sm">
+
+          NULL
+
+        </div>
+      );
+    }
+
+
+
+    // WET
+    if (
+      type
+        ?.toUpperCase()
+        .includes("WET")
+    ) {
 
       return (
         <div className="inline-flex items-center gap-2 px-4 py-2 rounded-2xl bg-emerald-50 text-emerald-600 font-semibold text-sm">
@@ -272,6 +316,7 @@ const RFIDTags = () => {
 
 
 
+    // DRY
     return (
       <div className="inline-flex items-center gap-2 px-4 py-2 rounded-2xl bg-blue-50 text-blue-600 font-semibold text-sm">
 
@@ -285,6 +330,7 @@ const RFIDTags = () => {
 
 
 
+
   return (
 
     <div
@@ -292,9 +338,7 @@ const RFIDTags = () => {
       className="min-h-screen bg-[#f5f7fb] px-0 pt-0 pb-8"
     >
 
-      {/* ========================================= */}
       {/* HEADER */}
-      {/* ========================================= */}
       <div className="flex items-center justify-between mb-4">
 
         <div>
@@ -316,8 +360,35 @@ const RFIDTags = () => {
 
           <input
             type="text"
-            placeholder="Search RFID or Phone..."
-            className="w-[300px] pl-5 pr-12 py-3 rounded-[16px] border border-slate-200 outline-none bg-white shadow-[0_4px_14px_rgba(15,23,42,0.05)] font-medium"
+
+            value={searchTerm}
+
+            onChange={(e) => {
+
+              setSearchTerm(
+                e.target.value
+              );
+
+              setCurrentPage(1);
+            }}
+
+            placeholder="Search SL No, RFID or Phone..."
+
+            className="
+            w-[320px]
+            pl-5
+            pr-12
+            py-3
+            rounded-[16px]
+            border
+            border-slate-200
+            outline-none
+            bg-white
+            text-black
+            placeholder:text-slate-400
+            shadow-[0_4px_14px_rgba(15,23,42,0.05)]
+            font-medium
+            "
           />
 
 
@@ -333,17 +404,13 @@ const RFIDTags = () => {
 
 
 
-      {/* ========================================= */}
-      {/* TABLE CONTAINER */}
-      {/* ========================================= */}
+      {/* TABLE */}
       <div
         ref={tableRef}
         className="bg-white rounded-[22px] border border-slate-100 shadow-[0_12px_30px_rgba(15,23,42,0.08)] overflow-hidden"
       >
 
-        {/* ========================================= */}
         {/* TOP BAR */}
-        {/* ========================================= */}
         <div className="px-6 py-5 border-b border-slate-100 flex items-center justify-between">
 
           <div className="flex items-center gap-4">
@@ -388,18 +455,18 @@ const RFIDTags = () => {
                 setCurrentPage(1);
               }}
 
-              className="px-5 py-3 rounded-[16px] bg-gradient-to-r from-white to-slate-50 border border-slate-200 outline-none text-slate-700 font-semibold shadow-[0_4px_14px_rgba(15,23,42,0.05)] hover:border-violet-300 transition-all"
+              className="px-5 py-3 rounded-[16px] bg-white border border-slate-200 outline-none text-slate-700 font-semibold"
             >
 
               <option value="All">
                 All Waste
               </option>
 
-              <option value="Wet">
+              <option value="WET">
                 Wet
               </option>
 
-              <option value="Dry">
+              <option value="DRY">
                 Dry
               </option>
 
@@ -418,32 +485,22 @@ const RFIDTags = () => {
                 setCurrentPage(1);
               }}
 
-              className="px-5 py-3 rounded-[16px] bg-gradient-to-r from-white to-slate-50 border border-slate-200 outline-none text-slate-700 font-semibold shadow-[0_4px_14px_rgba(15,23,42,0.05)] hover:border-violet-300 transition-all"
+              className="px-5 py-3 rounded-[16px] bg-white border border-slate-200 outline-none text-slate-700 font-semibold"
             >
 
               <option value="All">
                 All Status
               </option>
 
-              <option value="Mapped">
+              <option value="MAPPED">
                 Mapped
               </option>
 
-              <option value="Unmapped">
+              <option value="UNMAPPED">
                 Unmapped
               </option>
 
             </select>
-
-
-
-            <button className="px-5 py-3 rounded-[16px] bg-gradient-to-r from-violet-500 to-fuchsia-500 text-white font-semibold flex items-center gap-2 shadow-[0_8px_20px_rgba(139,92,246,0.25)]">
-
-              <Filter size={17} />
-
-              Filter
-
-            </button>
 
           </div>
 
@@ -451,9 +508,7 @@ const RFIDTags = () => {
 
 
 
-        {/* ========================================= */}
         {/* TABLE */}
-        {/* ========================================= */}
         <table className="w-full">
 
           <thead className="bg-slate-50">
@@ -488,67 +543,106 @@ const RFIDTags = () => {
 
           <tbody>
 
-            {currentRecords.map(
-              (item) => (
+            {loading ? (
 
-                <tr
-                  key={item.id}
-                  className="border-t border-slate-100 hover:bg-slate-50 transition-all duration-300"
+              <tr>
+                <td
+                  colSpan="5"
+                  className="text-center py-10 text-slate-500 font-semibold"
                 >
+                  Loading RFID data...
+                </td>
+              </tr>
 
-                  <td className="px-8 py-5 font-semibold text-slate-700">
-                    {item.id}
-                  </td>
+            ) : currentRecords.length === 0 ? (
+
+              <tr>
+                <td
+                  colSpan="5"
+                  className="text-center py-10 text-slate-500 font-semibold"
+                >
+                  No RFID tags found
+                </td>
+              </tr>
+
+            ) : (
+
+              currentRecords.map(
+                (item, index) => (
+
+                  <tr
+                    key={index}
+                    className="border-t border-slate-100 hover:bg-slate-50 transition-all duration-300"
+                  >
+
+                    {/* SL NO */}
+                    <td className="px-8 py-5 font-semibold text-slate-700">
+                      {item?.slno}
+                    </td>
 
 
 
-                  <td className="px-8 py-5 font-bold text-[#1e1b4b]">
-                    {item.rfid}
-                  </td>
+                    {/* RFID */}
+                    <td className="px-8 py-5 font-bold text-[#1e1b4b]">
+                      {item?.rfid}
+                    </td>
 
 
 
-                  <td className="px-8 py-5 font-semibold text-slate-700">
-                    {item.phone}
-                  </td>
+                    {/* PHONE */}
+                    <td className="px-8 py-5 font-semibold text-slate-700">
 
-
-
-                  <td className="px-8 py-5">
-
-                    {getWasteBadge(
-                      item.wasteType
-                    )}
-
-                  </td>
-
-
-
-                  <td className="px-8 py-5">
-
-                    <div
-                      className={`inline-flex items-center gap-2 px-4 py-2 rounded-2xl font-semibold text-sm
-
-                      ${
-                        item.status ===
-                        "Mapped"
-
-                          ? "bg-emerald-50 text-emerald-600"
-
-                          : "bg-rose-50 text-rose-600"
+                      {
+                        item?.phoneNumber === "NU" ||
+                        item?.phoneNumber === null ||
+                        item?.phoneNumber === ""
+                          ? "NULL"
+                          : item?.phoneNumber
                       }
-                      `}
-                    >
 
-                      <CheckCircle2 size={16} />
+                    </td>
 
-                      {item.status}
 
-                    </div>
 
-                  </td>
+                    {/* WASTE */}
+                    <td className="px-8 py-5">
 
-                </tr>
+                      {getWasteBadge(
+                        item?.wasteType
+                      )}
+
+                    </td>
+
+
+
+                    {/* STATUS */}
+                    <td className="px-8 py-5">
+
+                      <div
+                        className={`inline-flex items-center gap-2 px-4 py-2 rounded-2xl font-semibold text-sm
+
+                        ${
+                          item?.status
+                            ?.toUpperCase() ===
+                          "MAPPED"
+
+                            ? "bg-emerald-50 text-emerald-600"
+
+                            : "bg-rose-50 text-rose-600"
+                        }
+                        `}
+                      >
+
+                        <CheckCircle2 size={16} />
+
+                        {item?.status}
+
+                      </div>
+
+                    </td>
+
+                  </tr>
+                )
               )
             )}
 
@@ -558,9 +652,7 @@ const RFIDTags = () => {
 
 
 
-        {/* ========================================= */}
         {/* PAGINATION */}
-        {/* ========================================= */}
         <div className="flex items-center justify-between px-8 py-5 border-t border-slate-100">
 
           <div className="text-sm text-slate-500 font-medium">
@@ -568,7 +660,9 @@ const RFIDTags = () => {
             Showing{" "}
 
             <span className="font-bold text-[#1e1b4b]">
-              {startIndex + 1}
+              {totalRecords === 0
+                ? 0
+                : startIndex + 1}
             </span>
 
             {" "}to{" "}
@@ -621,7 +715,7 @@ const RFIDTags = () => {
 
             <div className="text-sm font-bold text-[#1e1b4b]">
 
-              Page {currentPage} of {totalPages}
+              Page {currentPage} of {totalPages || 1}
 
             </div>
 
@@ -639,13 +733,15 @@ const RFIDTags = () => {
               }
 
               disabled={
-                currentPage === totalPages
+                currentPage === totalPages ||
+                totalPages === 0
               }
 
               className={`px-5 py-2 rounded-[14px] font-semibold transition-all
 
               ${
-                currentPage === totalPages
+                currentPage === totalPages ||
+                totalPages === 0
                   ? "bg-slate-100 text-slate-400 cursor-not-allowed"
 
                   : "bg-violet-500 text-white hover:bg-violet-600"
