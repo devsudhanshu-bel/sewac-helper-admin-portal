@@ -12,17 +12,17 @@ const getLogsSummary = async (
 
   try {
 
-    // total logs
+    // TOTAL LOGS
     const totalLogs =
       await prisma.TrackingLog.count();
 
-    // today's date
+    // TODAY DATE
     const today =
       new Date();
 
     today.setHours(0, 0, 0, 0);
 
-    // today's logs
+    // TODAY LOGS
     const todayLogs =
       await prisma.TrackingLog.count({
         where: {
@@ -32,10 +32,11 @@ const getLogsSummary = async (
         },
       });
 
-    // active workers
+    // ACTIVE WORKERS
     const activeWorkers =
       await prisma.TrackingLog.groupBy({
         by: ["workerId"],
+
         where: {
           workerId: {
             not: null,
@@ -43,15 +44,18 @@ const getLogsSummary = async (
         },
       });
 
-    // latest log
+    // LATEST LOG
     const latestLog =
       await prisma.TrackingLog.findFirst({
+
         orderBy: {
           createdAt: "desc",
         },
+
       });
 
     return res.status(200).json({
+
       success: true,
 
       message:
@@ -68,7 +72,9 @@ const getLogsSummary = async (
 
         latestLog:
           latestLog?.createdAt || null,
+
       },
+
     });
 
   } catch (error) {
@@ -79,14 +85,18 @@ const getLogsSummary = async (
     );
 
     return res.status(500).json({
+
       success: false,
+
       message:
         "Internal server error",
+
     });
 
   }
 
 };
+
 
 
 // =========================================
@@ -115,15 +125,53 @@ const getAllLogs = async (
         let action =
           "UNKNOWN";
 
+        let wasteType =
+          "NU";
+
+        let rfidTag =
+          "-";
+
+
+        // =====================================
+        // FOUND = DISTRIBUTED
+        // =====================================
+
         if (
-          log.status ===
-          "FOUND"
+          log.status === "FOUND"
         ) {
 
           action =
             "DISTRIBUTED";
 
+
+          // DRY RFID
+          if (log.drySlno) {
+
+            wasteType =
+              "Dry Waste";
+
+            rfidTag =
+              log.drySlno;
+
+          }
+
+          // WET RFID
+          else if (log.wetSlno) {
+
+            wasteType =
+              "Wet Waste";
+
+            rfidTag =
+              log.wetSlno;
+
+          }
+
         }
+
+
+        // =====================================
+        // NOT FOUND
+        // =====================================
 
         if (
           log.status ===
@@ -133,7 +181,10 @@ const getAllLogs = async (
           action =
             "NOT_FOUND";
 
+          rfidTag = "-";
+
         }
+
 
         return {
 
@@ -143,23 +194,26 @@ const getAllLogs = async (
             log.createdAt,
 
           worker:
-            log.workerId,
+            log.workerId || "NU",
 
           action,
 
-          rfidTag:
-            log.wetSlno ||
-            log.drySlno ||
-            "-",
+          wasteType,
+
+          rfidTag,
 
           citizenName:
-            log.citizenName,
+            log.citizenName || "NU",
 
           phoneNumber:
-            log.phoneNumber,
+            log.phoneNumber || "NU",
+
+          remarks:
+            log.remarks || "NU",
 
           status:
             log.status,
+
         };
 
       });
@@ -170,6 +224,9 @@ const getAllLogs = async (
 
       message:
         "Logs fetched successfully",
+
+      total:
+        formattedLogs.length,
 
       data:
         formattedLogs,
@@ -184,9 +241,12 @@ const getAllLogs = async (
     );
 
     return res.status(500).json({
+
       success: false,
+
       message:
         "Internal server error",
+
     });
 
   }
