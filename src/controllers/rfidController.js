@@ -16,113 +16,60 @@ const getAllRFIDTags = async (
 
   try {
 
-    // FETCH MASTER CITIZEN DATA
+    // =====================================
+    // FETCH ALL RFID INVENTORY
+    // =====================================
 
-    const citizens =
-      await prisma.MasterCitizenData.findMany({
+    const rfids =
+      await prisma.RFIDMapping.findMany({
 
         orderBy: {
-          id: "asc",
+          slno: "asc",
         },
 
       });
 
 
-    const formattedData = [];
+    // =====================================
+    // FORMAT RFID DATA
+    // =====================================
+
+    const formattedData =
+      rfids.map((tag) => {
+
+        const isMapped =
+          tag.phoneNumber &&
+          tag.wasteType;
 
 
-    citizens.forEach((citizen) => {
-
-      // =====================================
-      // BOTH DRY + WET
-      // =====================================
-
-      if (
-        citizen.drySlno &&
-        citizen.dryRFID
-      ) {
-
-        formattedData.push({
+        return {
 
           slno:
-            citizen.drySlno,
+            String(tag.slno)
+              .padStart(8, "0"),
 
           rfid:
-            citizen.dryRFID,
+            tag.rfid,
 
           phoneNumber:
-            citizen.contactNumber || "NULL",
+            tag.phoneNumber || "NU",
 
           wasteType:
-            "Dry Waste",
+            tag.wasteType || "NU",
 
           status:
-            "MAPPED",
+            isMapped
+              ? "MAPPED"
+              : "UNMAPPED",
 
-        });
+        };
 
-      }
-
-
-      if (
-        citizen.wetSlno &&
-        citizen.wetRFID
-      ) {
-
-        formattedData.push({
-
-          slno:
-            citizen.wetSlno,
-
-          rfid:
-            citizen.wetRFID,
-
-          phoneNumber:
-            citizen.contactNumber || "NULL",
-
-          wasteType:
-            "Wet Waste",
-
-          status:
-            "MAPPED",
-
-        });
-
-      }
+      });
 
 
-      // =====================================
-      // UNMAPPED
-      // =====================================
-
-      if (
-        !citizen.drySlno &&
-        !citizen.wetSlno
-      ) {
-
-        formattedData.push({
-
-          slno:
-            "NULL",
-
-          rfid:
-            "NULL",
-
-          phoneNumber:
-            "NULL",
-
-          wasteType:
-            "NULL",
-
-          status:
-            "UNMAPPED",
-
-        });
-
-      }
-
-    });
-
+    // =====================================
+    // RESPONSE
+    // =====================================
 
     return res.status(200).json({
 
