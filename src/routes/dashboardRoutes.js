@@ -6,9 +6,15 @@ const verifyToken =
   require("../middleware/authMiddleware");
 
 const {
+
   getTotalRFIDTags,
+
   getDistributedTags,
+
+  getActiveWorkers,
+
   getTagsDistributedByWorkers,
+
 } = require(
   "../controllers/dashboardController"
 );
@@ -33,6 +39,17 @@ router.get(
   "/distributed-tags",
   verifyToken,
   getDistributedTags
+);
+
+
+// =========================================
+// ACTIVE WORKERS
+// =========================================
+
+router.get(
+  "/active-workers",
+  verifyToken,
+  getActiveWorkers
 );
 
 

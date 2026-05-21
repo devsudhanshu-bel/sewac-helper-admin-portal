@@ -1,120 +1,127 @@
-const prisma = require("../config/prisma");
+// =========================================
+// rfidController.js
+// =========================================
 
+const prisma = require("../config/prisma");
 
 
 // =========================================
 // GET ALL RFID TAGS
 // =========================================
-const getAllRFIDTags = async (req, res) => {
+
+const getAllRFIDTags = async (
+  req,
+  res
+) => {
 
   try {
 
-    // FETCH RFID MASTER DATA
-    const rfids = await prisma.RFIDMapping.findMany({
+    // FETCH MASTER CITIZEN DATA
 
-      orderBy: {
-        slno: "asc",
-      },
+    const citizens =
+      await prisma.MasterCitizenData.findMany({
 
-    });
+        orderBy: {
+          id: "asc",
+        },
 
-    // FETCH TRACKING LOGS
-    const logs = await prisma.TrackingLog.findMany();
-
+      });
 
 
-    // FORMAT DATA
-    const formattedData = rfids.map((rfid) => {
-
-      // DRY MATCH
-      const dryMatch = logs.find(
-
-        (log) =>
-
-          log.drySlno &&
-
-          String(log.drySlno).padStart(8, "0") ===
-          String(rfid.slno).padStart(8, "0")
-
-      );
+    const formattedData = [];
 
 
+    citizens.forEach((citizen) => {
 
-      // WET MATCH
-      const wetMatch = logs.find(
+      // =====================================
+      // BOTH DRY + WET
+      // =====================================
 
-        (log) =>
+      if (
+        citizen.drySlno &&
+        citizen.dryRFID
+      ) {
 
-          log.wetSlno &&
+        formattedData.push({
 
-          String(log.wetSlno).padStart(8, "0") ===
-          String(rfid.slno).padStart(8, "0")
+          slno:
+            citizen.drySlno,
 
-      );
-
-
-
-      // DRY RFID
-      if (dryMatch) {
-
-        return {
-
-          slno: rfid.slno,
-
-          rfid: rfid.rfid,
+          rfid:
+            citizen.dryRFID,
 
           phoneNumber:
-            dryMatch.phoneNumber || "NU",
+            citizen.contactNumber || "NULL",
 
-          wasteType: "Dry Waste",
+          wasteType:
+            "Dry Waste",
 
-          status: "MAPPED",
+          status:
+            "MAPPED",
 
-        };
+        });
 
       }
 
 
+      if (
+        citizen.wetSlno &&
+        citizen.wetRFID
+      ) {
 
-      // WET RFID
-      if (wetMatch) {
+        formattedData.push({
 
-        return {
+          slno:
+            citizen.wetSlno,
 
-          slno: rfid.slno,
-
-          rfid: rfid.rfid,
+          rfid:
+            citizen.wetRFID,
 
           phoneNumber:
-            wetMatch.phoneNumber || "NU",
+            citizen.contactNumber || "NULL",
 
-          wasteType: "Wet Waste",
+          wasteType:
+            "Wet Waste",
 
-          status: "MAPPED",
+          status:
+            "MAPPED",
 
-        };
+        });
 
       }
 
 
+      // =====================================
+      // UNMAPPED
+      // =====================================
 
-      // UNMAPPED RFID
-      return {
+      if (
+        !citizen.drySlno &&
+        !citizen.wetSlno
+      ) {
 
-        slno: rfid.slno,
+        formattedData.push({
 
-        rfid: rfid.rfid,
+          slno:
+            "NULL",
 
-        phoneNumber: "NU",
+          rfid:
+            "NULL",
 
-        wasteType: "NU",
+          phoneNumber:
+            "NULL",
 
-        status: "UNMAPPED",
+          wasteType:
+            "NULL",
 
-      };
+          status:
+            "UNMAPPED",
+
+        });
+
+      }
 
     });
-
 
 
     return res.status(200).json({
@@ -124,9 +131,11 @@ const getAllRFIDTags = async (req, res) => {
       message:
         "RFID tags fetched successfully",
 
-      total: formattedData.length,
+      total:
+        formattedData.length,
 
-      data: formattedData,
+      data:
+        formattedData,
 
     });
 
@@ -149,7 +158,6 @@ const getAllRFIDTags = async (req, res) => {
   }
 
 };
-
 
 
 module.exports = {

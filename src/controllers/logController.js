@@ -1,3 +1,7 @@
+// =========================================
+// logController.js
+// =========================================
+
 const prisma = require("../config/prisma");
 
 
@@ -13,28 +17,38 @@ const getLogsSummary = async (
   try {
 
     // TOTAL LOGS
+
     const totalLogs =
       await prisma.TrackingLog.count();
 
+
     // TODAY DATE
+
     const today =
       new Date();
 
     today.setHours(0, 0, 0, 0);
 
+
     // TODAY LOGS
+
     const todayLogs =
       await prisma.TrackingLog.count({
+
         where: {
           createdAt: {
             gte: today,
           },
         },
+
       });
 
+
     // ACTIVE WORKERS
+
     const activeWorkers =
       await prisma.TrackingLog.groupBy({
+
         by: ["workerId"],
 
         where: {
@@ -42,9 +56,12 @@ const getLogsSummary = async (
             not: null,
           },
         },
+
       });
 
+
     // LATEST LOG
+
     const latestLog =
       await prisma.TrackingLog.findFirst({
 
@@ -53,6 +70,7 @@ const getLogsSummary = async (
         },
 
       });
+
 
     return res.status(200).json({
 
@@ -98,7 +116,6 @@ const getLogsSummary = async (
 };
 
 
-
 // =========================================
 // ALL LOGS
 // =========================================
@@ -119,119 +136,126 @@ const getAllLogs = async (
 
       });
 
-    const formattedLogs =
-      logs.map((log) => {
 
-        let action =
-          "UNKNOWN";
+const formattedLogs = [];
 
-        let wasteType =
-          "NU";
+logs.forEach((log) => {
 
-        let rfidTag =
-          "-";
+  // =====================================
+  // DRY RFID
+  // =====================================
 
+  if (log.drySlno) {
 
-        // =====================================
-        // FOUND = DISTRIBUTED
-        // =====================================
+    formattedLogs.push({
 
-        if (
-          log.status === "FOUND"
-        ) {
+      id: `${log.id}-dry`,
 
-          action =
-            "DISTRIBUTED";
+      time: log.createdAt,
 
+      worker: log.workerId || "NU",
 
-          // DRY RFID
-          if (log.drySlno) {
+      action: "DISTRIBUTED",
 
-            wasteType =
-              "Dry Waste";
+      wasteType: "Dry Waste",
 
-            rfidTag =
-              log.drySlno;
+      rfidTag: log.drySlno,
 
-          }
+      phoneNumber:
+        log.phoneNumber || "NU",
 
-          // WET RFID
-          else if (log.wetSlno) {
+      citizenName:
+        log.citizenName || "NU",
 
-            wasteType =
-              "Wet Waste";
+      remarks:
+        log.remarks || "NU",
 
-            rfidTag =
-              log.wetSlno;
-
-          }
-
-        }
-
-
-        // =====================================
-        // NOT FOUND
-        // =====================================
-
-        if (
-          log.status ===
-          "NOT_FOUND"
-        ) {
-
-          action =
-            "NOT_FOUND";
-
-          rfidTag = "-";
-
-        }
-
-
-        return {
-
-          id: log.id,
-
-          time:
-            log.createdAt,
-
-          worker:
-            log.workerId || "NU",
-
-          action,
-
-          wasteType,
-
-          rfidTag,
-
-          citizenName:
-            log.citizenName || "NU",
-
-          phoneNumber:
-            log.phoneNumber || "NU",
-
-          remarks:
-            log.remarks || "NU",
-
-          status:
-            log.status,
-
-        };
-
-      });
-
-    return res.status(200).json({
-
-      success: true,
-
-      message:
-        "Logs fetched successfully",
-
-      total:
-        formattedLogs.length,
-
-      data:
-        formattedLogs,
+      status:
+        log.status,
 
     });
+
+  }
+
+  // =====================================
+  // WET RFID
+  // =====================================
+
+  if (log.wetSlno) {
+
+    formattedLogs.push({
+
+      id: `${log.id}-wet`,
+
+      time: log.createdAt,
+
+      worker: log.workerId || "NU",
+
+      action: "DISTRIBUTED",
+
+      wasteType: "Wet Waste",
+
+      rfidTag: log.wetSlno,
+
+      phoneNumber:
+        log.phoneNumber || "NU",
+
+      citizenName:
+        log.citizenName || "NU",
+
+      remarks:
+        log.remarks || "NU",
+
+      status:
+        log.status,
+
+    });
+
+  }
+
+  // =====================================
+  // NO RFID FOUND
+  // =====================================
+
+  if (
+    !log.drySlno &&
+    !log.wetSlno
+  ) {
+
+    formattedLogs.push({
+
+      id: log.id,
+
+      time: log.createdAt,
+
+      worker: log.workerId || "NU",
+
+      action:
+        log.status === "NOT_FOUND"
+          ? "NOT_FOUND"
+          : "SCANNED",
+
+      wasteType: "N/A",
+
+      rfidTag: "N/A",
+
+      phoneNumber:
+        log.phoneNumber || "NU",
+
+      citizenName:
+        log.citizenName || "NU",
+
+      remarks:
+        log.remarks || "NU",
+
+      status:
+        log.status,
+
+    });
+
+  }
+
+});
 
   } catch (error) {
 
