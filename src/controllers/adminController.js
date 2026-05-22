@@ -1,57 +1,177 @@
-const jwt = require("jsonwebtoken");
-const authService = require("../services/authService");
-const jwtConfig = require("../config/jwt");
+// =========================================
+// adminController.js
+// =========================================
 
-const loginAdmin = async (req, res) => {
+const prisma = require("../config/prisma");
+
+const bcrypt =
+  require("bcryptjs");
+
+const jwt =
+  require("jsonwebtoken");
+
+
+// =========================================
+// ADMIN LOGIN
+// =========================================
+
+const loginAdmin = async (
+  req,
+  res
+) => {
+
   try {
-    const { username, password } = req.body;
 
-    // validation
-    if (!username || !password) {
-      return res.status(400).json({
-        success: false,
-        message: "Username and password required",
-      });
-    }
-
-    const isValid = await authService.validateAdmin(
+    const {
       username,
-      password
-    );
+      password,
+    } = req.body;
 
-    if (!isValid) {
-      return res.status(401).json({
+
+    // =====================================
+    // CHECK EMPTY FIELDS
+    // =====================================
+
+    if (
+      !username ||
+      !password
+    ) {
+
+      return res.status(400).json({
+
         success: false,
-        message: "Invalid credentials",
+
+        message:
+          "Username and password are required",
+
       });
+
     }
 
-    // token
-    const token = jwt.sign(
-      {
-        username: "sewac",
-        role: "admin",
-      },
-      jwtConfig.secret,
-      {
-        expiresIn: jwtConfig.expiresIn,
-      }
-    );
+
+    // =====================================
+    // FIND ADMIN
+    // =====================================
+
+    const admin =
+      await prisma.Admin.findFirst({
+
+        where: {
+          username,
+        },
+
+      });
+
+
+    // =====================================
+    // ADMIN NOT FOUND
+    // =====================================
+
+    if (!admin) {
+
+      return res.status(401).json({
+
+        success: false,
+
+        message:
+          "Invalid credentials",
+
+      });
+
+    }
+
+
+    // =====================================
+    // CHECK PASSWORD
+    // =====================================
+
+    const isMatch =
+      await bcrypt.compare(
+        password,
+        admin.password
+      );
+
+
+    if (!isMatch) {
+
+      return res.status(401).json({
+
+        success: false,
+
+        message:
+          "Invalid credentials",
+
+      });
+
+    }
+
+
+    // =====================================
+    // GENERATE JWT TOKEN
+    // =====================================
+
+    const token =
+      jwt.sign(
+
+        {
+          id: admin.id,
+          username:
+            admin.username,
+        },
+
+        process.env.JWT_SECRET,
+
+        {
+          expiresIn: "7d",
+        }
+
+      );
+
+
+    // =====================================
+    // SUCCESS RESPONSE
+    // =====================================
 
     return res.status(200).json({
+
       success: true,
-      message: "Admin login successful",
+
+      message:
+        "Login successful",
+
       token,
+
+      admin: {
+
+        id: admin.id,
+
+        username:
+          admin.username,
+
+      },
+
     });
+
   } catch (error) {
-    console.error("Admin Login Error:", error);
+
+    console.error(
+      "Admin Login Error:",
+      error
+    );
 
     return res.status(500).json({
+
       success: false,
-      message: "Internal server error",
+
+      message:
+        "Internal server error",
+
     });
+
   }
+
 };
+
 
 module.exports = {
   loginAdmin,
