@@ -54,7 +54,7 @@ const loginAdmin = async (
     // =====================================
 
     const admin =
-      await prisma.Admin.findFirst({
+      await prisma.Moderator.findFirst({
 
         where: {
           username,
