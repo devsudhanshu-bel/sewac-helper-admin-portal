@@ -7,6 +7,7 @@ const router =
 const {
   getLogsSummary,
   getAllLogs,
+  getDailyCounts,
 } = require(
   "../controllers/logController"
 );
@@ -30,6 +31,15 @@ router.get(
 router.get(
   "/all",
   getAllLogs
+);
+
+// =========================================
+// DAILY DISTRIBUTION COUNTS
+// =========================================
+
+router.get(
+  "/daily-counts",
+  getDailyCounts
 );
 
 

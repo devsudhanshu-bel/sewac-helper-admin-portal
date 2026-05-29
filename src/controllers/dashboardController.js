@@ -3,7 +3,27 @@
 // =========================================
 
 const prisma = require("../config/prisma");
+const isValidRFID = (value) => {
 
+  if (
+    value === null ||
+    value === undefined
+  ) {
+    return false;
+  }
+
+  const cleaned =
+    String(value)
+      .trim()
+      .toUpperCase();
+
+  return (
+    cleaned !== "NULL" &&
+    cleaned !== "N/A" &&
+    cleaned !== ""
+  );
+
+};
 
 // =========================================
 // TOTAL RFID TAGS
@@ -68,19 +88,39 @@ const getDistributedTags = async (
 
   try {
 
-    // EVERY RFID ROW HAVING PHONE NUMBER
-    // = DISTRIBUTED RFID
-
-    const distributedTags =
-      await prisma.RFIDMapping.count({
+    const logs =
+      await prisma.TrackingLog.findMany({
 
         where: {
-          phoneNumber: {
-            not: null,
-          },
+          status: "FOUND",
+        },
+
+        select: {
+          drySlno: true,
+          wetSlno: true,
         },
 
       });
+
+
+    let distributedTags = 0;
+
+
+    logs.forEach((log) => {
+
+      if (
+        isValidRFID(log.drySlno)
+      ) {
+        distributedTags++;
+      }
+
+      if (
+        isValidRFID(log.wetSlno)
+      ) {
+        distributedTags++;
+      }
+
+    });
 
 
     return res.status(200).json({
@@ -115,8 +155,6 @@ const getDistributedTags = async (
   }
 
 };
-
-
 // =========================================
 // ACTIVE WORKERS
 // =========================================

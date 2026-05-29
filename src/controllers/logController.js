@@ -3,7 +3,27 @@
 // =========================================
 
 const prisma = require("../config/prisma");
+const isValidRFID = (value) => {
 
+  if (
+    value === null ||
+    value === undefined
+  ) {
+    return false;
+  }
+
+  const cleaned =
+    String(value)
+      .trim()
+      .toUpperCase();
+
+  return (
+    cleaned !== "NULL" &&
+    cleaned !== "N/A" &&
+    cleaned !== ""
+  );
+
+};
 
 // =========================================
 // LOG SUMMARY
@@ -295,8 +315,116 @@ const getAllLogs = async (
 
 };
 
+// =========================================
+// DAILY DISTRIBUTION COUNTS
+// =========================================
+
+const getDailyCounts = async (
+  req,
+  res
+) => {
+
+  try {
+
+    const logs =
+      await prisma.TrackingLog.findMany({
+
+        where: {
+          status: "FOUND",
+        },
+
+        select: {
+          createdAt: true,
+          drySlno: true,
+          wetSlno: true,
+        },
+
+        orderBy: {
+          createdAt: "asc",
+        },
+
+      });
+
+
+    const dailyCounts = {};
+
+
+    logs.forEach((log) => {
+
+      const date =
+        log.createdAt
+          .toISOString()
+          .split("T")[0];
+
+
+      if (!dailyCounts[date]) {
+
+        dailyCounts[date] = 0;
+
+      }
+
+
+      if (
+        isValidRFID(log.drySlno)
+      ) {
+        dailyCounts[date]++;
+      }
+
+      if (
+        isValidRFID(log.wetSlno)
+      ) {
+        dailyCounts[date]++;
+      }
+
+    });
+
+
+    const formattedData =
+      Object.entries(
+        dailyCounts
+      ).map(
+        ([date, count]) => ({
+
+          date,
+
+          count,
+
+        })
+      );
+
+
+    return res.status(200).json({
+
+      success: true,
+
+      data:
+        formattedData,
+
+    });
+
+  } catch (error) {
+
+    console.error(
+      "Daily Counts Error:",
+      error
+    );
+
+    return res.status(500).json({
+
+      success: false,
+
+      message:
+        "Internal server error",
+
+    });
+
+  }
+
+};
+
 
 module.exports = {
   getLogsSummary,
   getAllLogs,
+  getDailyCounts,
 };
