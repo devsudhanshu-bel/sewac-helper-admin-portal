@@ -171,7 +171,7 @@ const getActiveWorkers = async (
 
         where: {
           username: {
-            not: "",
+            not: "sewac",
           },
         },
 
@@ -225,137 +225,106 @@ const getTagsDistributedByWorkers =
 
     try {
 
-      // =====================================
-      // GET ALL WORKERS
-      // =====================================
+const workers =
+  await prisma.Moderator.findMany({
 
-      const workers =
-        await prisma.Moderator.findMany({
+    where: {
+      username: {
+        not: "sewac",
+      },
+    },
 
-          select: {
-            id: true,
-            username: true,
-          },
+    select: {
+      id: true,
+      username: true,
+    },
 
-          orderBy: {
-            username: "asc",
-          },
+    orderBy: {
+      username: "asc",
+    },
 
-        });
+  });
 
+const workerMap = {};
+// =====================================
+// INITIALIZE ALL WORKERS
+// =====================================
 
-      // =====================================
-      // GET OFFICIAL DISTRIBUTED RFIDS
-      // =====================================
+workers.forEach((worker) => {
 
-      const distributedRFIDs =
-        await prisma.RFIDMapping.findMany({
+  workerMap[
+    worker.username
+  ] = 0;
 
-          where: {
-            phoneNumber: {
-              not: null,
-            },
-          },
-
-          select: {
-            slno: true,
-            wasteType: true,
-          },
-
-        });
+});
 
 
-      // =====================================
-      // WORKER COUNTS
-      // =====================================
+// =====================================
+// FETCH ALL FOUND LOGS
+// =====================================
 
-      const workerMap = {};
+const logs =
+  await prisma.TrackingLog.findMany({
 
+    where: {
+      status: "FOUND",
+    },
 
-      // =====================================
-      // FOR EACH RFID
-      // FIND LATEST RESPONSIBLE WORKER
-      // =====================================
+    select: {
 
-      for (const rfid of distributedRFIDs) {
+      workerId: true,
 
-        let latestLog = null;
+      drySlno: true,
 
+      wetSlno: true,
 
-        // DRY RFID
+    },
 
-        if (
-          rfid.wasteType === "DRY"
-        ) {
-
-          latestLog =
-            await prisma.TrackingLog.findFirst({
-
-              where: {
-                drySlno:
-                  rfid.slno,
-              },
-
-              orderBy: {
-                createdAt:
-                  "desc",
-              },
-
-            });
-
-        }
+  });
 
 
-        // WET RFID
+// =====================================
+// COUNT RFIDS PER WORKER
+// =====================================
 
-        if (
-          rfid.wasteType === "WET"
-        ) {
+logs.forEach((log) => {
 
-          latestLog =
-            await prisma.TrackingLog.findFirst({
-
-              where: {
-                wetSlno:
-                  rfid.slno,
-              },
-
-              orderBy: {
-                createdAt:
-                  "desc",
-              },
-
-            });
-
-        }
+  if (
+    !log.workerId ||
+    !workerMap.hasOwnProperty(
+      log.workerId
+    )
+  ) {
+    return;
+  }
 
 
-        // COUNT WORKER
+  if (
+    isValidRFID(
+      log.drySlno
+    )
+  ) {
 
-        if (
-          latestLog &&
-          latestLog.workerId
-        ) {
+    workerMap[
+      log.workerId
+    ]++;
 
-          if (
-            !workerMap[
-              latestLog.workerId
-            ]
-          ) {
+  }
 
-            workerMap[
-              latestLog.workerId
-            ] = 0;
 
-          }
+  if (
+    isValidRFID(
+      log.wetSlno
+    )
+  ) {
 
-          workerMap[
-            latestLog.workerId
-          ]++;
+    workerMap[
+      log.workerId
+    ]++;
 
-        }
+  }
 
-      }
+});
 
 
       // =====================================
