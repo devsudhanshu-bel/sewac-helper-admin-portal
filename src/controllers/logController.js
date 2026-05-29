@@ -9,68 +9,42 @@ const prisma = require("../config/prisma");
 // LOG SUMMARY
 // =========================================
 
-const getLogsSummary = async (
-  req,
-  res
-) => {
+const getLogsSummary = async (req, res) => {
 
   try {
 
-    // TOTAL LOGS
-
     const totalLogs =
       await prisma.TrackingLog.count();
-
-
-    // TODAY DATE
 
     const today =
       new Date();
 
     today.setHours(0, 0, 0, 0);
 
-
-    // TODAY LOGS
-
     const todayLogs =
       await prisma.TrackingLog.count({
-
         where: {
           createdAt: {
             gte: today,
           },
         },
-
       });
-
-
-    // ACTIVE WORKERS
 
     const activeWorkers =
-      await prisma.TrackingLog.groupBy({
-
-        by: ["workerId"],
-
+      await prisma.Moderator.count({
         where: {
-          workerId: {
-            not: null,
+          username: {
+            not: "sewac",
           },
         },
-
       });
-
-
-    // LATEST LOG
 
     const latestLog =
       await prisma.TrackingLog.findFirst({
-
         orderBy: {
           createdAt: "desc",
         },
-
       });
-
 
     return res.status(200).json({
 
@@ -85,8 +59,7 @@ const getLogsSummary = async (
 
         todayLogs,
 
-        activeWorkers:
-          activeWorkers.length,
+        activeWorkers,
 
         latestLog:
           latestLog?.createdAt || null,
@@ -114,7 +87,6 @@ const getLogsSummary = async (
   }
 
 };
-
 
 // =========================================
 // ALL LOGS
