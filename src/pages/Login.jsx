@@ -289,7 +289,7 @@ const Login = () => {
 
         const response =
           await fetch(
-            "https://sewac-helper-admin-portal.onrender.com/api/admin/login",
+            "http://18.60.41.32:5000/api/admin/login",
             {
               method: "POST",
 

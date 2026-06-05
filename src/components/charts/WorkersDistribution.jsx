@@ -8,9 +8,8 @@ import gsap from "gsap";
 
 import {
   User,
+  Loader2,
 } from "lucide-react";
-
-
 
 const WorkersDistribution = () => {
 
@@ -18,17 +17,17 @@ const WorkersDistribution = () => {
 
   const workersRef = useRef([]);
 
-
-
-
   // =========================================
   // STATE
   // =========================================
   const [workerData, setWorkerData] =
     useState([]);
 
+  const [loading, setLoading] =
+    useState(true);
 
-
+  const [totalDistributed, setTotalDistributed] =
+    useState(0);
 
   // =========================================
   // FETCH WORKER DISTRIBUTION
@@ -40,6 +39,8 @@ const WorkersDistribution = () => {
 
         try {
 
+          setLoading(true);
+
           // =====================================
           // TOKEN
           // =====================================
@@ -48,25 +49,23 @@ const WorkersDistribution = () => {
               "token"
             );
 
-
-
           if (!token) {
 
             console.error(
               "No token found"
             );
 
+            setLoading(false);
+
             return;
           }
-
-
 
           // =====================================
           // API CALL
           // =====================================
           const response =
             await fetch(
-              "https://sewac-helper-admin-portal.onrender.com/api/dashboard/worker-distribution",
+              "http://18.60.41.32:5000/api/dashboard/worker-distribution",
               {
                 method: "GET",
 
@@ -75,10 +74,22 @@ const WorkersDistribution = () => {
                   "Content-Type":
                     "application/json",
                 },
+
+                cache: "no-store",
               }
             );
 
+          if (!response.ok) {
 
+            console.error(
+              "API Error:",
+              response.status
+            );
+
+            setLoading(false);
+
+            return;
+          }
 
           const result =
             await response.json();
@@ -88,19 +99,44 @@ const WorkersDistribution = () => {
             result
           );
 
-
-
           // =====================================
           // VALIDATE
           // =====================================
           if (
-            result.success &&
-            result.data
+            result?.success &&
+            result?.data?.tagsByWorker
           ) {
 
-            // TOTAL TAGS
-            const totalTags =
-              result.data.reduce(
+            // =====================================
+            // CLEAN DATA
+            // =====================================
+            const cleanedWorkers =
+              result.data.tagsByWorker.map(
+                (worker, index) => {
+
+                  const distributedTags =
+                    Number(
+                      worker.distributedTags
+                    ) || 0;
+
+                  return {
+                    id: index + 1,
+
+                    worker:
+                      worker.username ||
+                      "Unknown",
+
+                    distributedTags,
+                  };
+
+                }
+              );
+
+            // =====================================
+            // TOTAL DISTRIBUTED
+            // =====================================
+            const total =
+              cleanedWorkers.reduce(
                 (
                   acc,
                   worker
@@ -111,81 +147,68 @@ const WorkersDistribution = () => {
                 0
               );
 
+            setTotalDistributed(total);
 
-
+            // =====================================
             // FORMAT DATA
+            // =====================================
             const formattedData =
-              result.data.map(
-                (
-                  worker,
-                  index
-                ) => {
+              cleanedWorkers
+                .filter(
+                  (worker) =>
+                    worker.distributedTags > 0
+                )
+                .map(
+                  (
+                    worker,
+                    index
+                  ) => {
 
-                  const percentage =
-                    totalTags > 0
-                      ? (
-                          (worker.distributedTags /
-                            totalTags) *
-                          100
-                        ).toFixed(2)
-                      : 0;
-
-
-
-                  const progress =
-                    totalTags > 0
-                      ? `${
-                          (
+                    const percentage =
+                      total > 0
+                        ? (
                             (worker.distributedTags /
-                              totalTags) *
+                              total) *
                             100
-                          ).toFixed(
-                            0
+                          ).toFixed(2)
+                        : "0.00";
+
+                    return {
+
+                      id:
+                        index + 1,
+
+                      worker:
+                        worker.worker,
+
+                      distributed:
+                        worker.distributedTags,
+
+                      percentage:
+                        `${percentage}%`,
+
+                      progress:
+                        `${Math.round(
+                          Number(
+                            percentage
                           )
-                        }%`
-                      : "0%";
+                        )}%`,
 
+                      rawValue:
+                        worker.distributedTags,
+                    };
 
+                  }
+                );
 
-                  return {
-
-                    id:
-                      index + 1,
-
-                    worker:
-                      worker.worker,
-
-                    distributed:
-                      worker.distributedTags.toLocaleString(),
-
-                    percentage: `${percentage}%`,
-
-                    progress,
-                  };
-
-                }
-              );
-
-
-
+            // =====================================
             // SORT DESCENDING
+            // =====================================
             formattedData.sort(
               (a, b) =>
-                parseInt(
-                  b.distributed.replace(
-                    /,/g,
-                    ""
-                  )
-                ) -
-                parseInt(
-                  a.distributed.replace(
-                    /,/g,
-                    ""
-                  )
-                )
+                b.rawValue -
+                a.rawValue
             );
-
-
 
             setWorkerData(
               formattedData
@@ -200,24 +223,24 @@ const WorkersDistribution = () => {
             error
           );
 
+        } finally {
+
+          setLoading(false);
+
         }
       };
-
-
 
     fetchWorkers();
 
   }, []);
-
-
-
 
   // =========================================
   // GSAP
   // =========================================
   useEffect(() => {
 
-    // CARD
+    if (loading) return;
+
     gsap.fromTo(
       cardRef.current,
 
@@ -236,56 +259,68 @@ const WorkersDistribution = () => {
       }
     );
 
+    if (
+      workersRef.current.length > 0
+    ) {
 
+      gsap.fromTo(
+        workersRef.current,
 
-    // ROWS
-    gsap.fromTo(
-      workersRef.current,
+        {
+          x: 15,
+          opacity: 0,
+        },
 
-      {
-        x: 15,
-        opacity: 0,
-      },
+        {
+          x: 0,
+          opacity: 1,
 
-      {
-        x: 0,
-        opacity: 1,
+          stagger: 0.05,
 
-        stagger: 0.05,
+          delay: 0.12,
 
-        delay: 0.12,
+          duration: 0.35,
 
-        duration: 0.35,
+          ease: "power3.out",
+        }
+      );
 
-        ease: "power3.out",
-      }
-    );
+    }
 
-  }, [workerData]);
-
-
-
+  }, [workerData, loading]);
 
   return (
 
     <div
       ref={cardRef}
 
-      className="bg-white border border-purple-100 rounded-[26px] p-4 shadow-sm h-[320px] flex flex-col"
+      className="bg-white border border-purple-100 rounded-[26px] p-4 shadow-sm h-[420px] flex flex-col"
     >
 
-      {/* ========================================= */}
       {/* HEADER */}
-      {/* ========================================= */}
       <div className="flex items-center justify-between mb-5">
 
-        <h2 className="text-[15px] font-bold text-[#1f1f3d]">
+        <div>
 
-          Tags Distributed by Workers
+          <h2 className="text-[15px] font-bold text-[#1f1f3d]">
 
-        </h2>
+            Tags Distributed by Workers
 
+          </h2>
 
+          <p className="text-[11px] text-[#8f8fa8] mt-1">
+
+            Total Distributed:
+            {" "}
+            <span className="font-bold text-pink-500">
+
+              {totalDistributed.toLocaleString()}
+
+            </span>
+
+          </p>
+
+        </div>
 
         <button className="text-pink-500 text-[11px] font-semibold hover:opacity-80 transition-all duration-200">
 
@@ -295,65 +330,60 @@ const WorkersDistribution = () => {
 
       </div>
 
-
-
-      {/* ========================================= */}
       {/* TABLE HEAD */}
-      {/* ========================================= */}
       <div className="grid grid-cols-[30px_1fr_90px_65px] mb-3 px-1">
 
         <p className="text-[10px] font-semibold text-[#8f8fa8]">
-
           #
-
         </p>
 
-
-
         <p className="text-[10px] font-semibold text-[#8f8fa8]">
-
           Worker
-
         </p>
 
-
-
         <p className="text-[10px] font-semibold text-[#8f8fa8]">
-
           Tags
-
         </p>
 
-
-
         <p className="text-[10px] font-semibold text-[#8f8fa8]">
-
           %
-
         </p>
 
       </div>
 
-
-
-      {/* ========================================= */}
-      {/* SCROLLABLE */}
-      {/* ========================================= */}
+      {/* CONTENT */}
       <div className="flex-1 overflow-y-auto pr-1 custom-scrollbar">
 
-        <div className="flex flex-col gap-4">
+        {loading ? (
 
-          {workerData.length === 0 ? (
+          <div className="h-[180px] flex flex-col items-center justify-center gap-3">
 
-            <div className="h-[180px] flex items-center justify-center text-[#8f8fa8] text-sm font-medium">
+            <Loader2
+              size={28}
+              className="animate-spin text-pink-500"
+            />
 
-              No worker data found
+            <p className="text-[#8f8fa8] text-sm font-medium">
 
-            </div>
+              Loading worker data...
 
-          ) : (
+            </p>
 
-            workerData.map(
+          </div>
+
+        ) : workerData.length === 0 ? (
+
+          <div className="h-[180px] flex items-center justify-center text-[#8f8fa8] text-sm font-medium">
+
+            No worker data found
+
+          </div>
+
+        ) : (
+
+          <div className="flex flex-col gap-4">
+
+            {workerData.map(
               (
                 worker,
                 index
@@ -378,12 +408,9 @@ const WorkersDistribution = () => {
 
                   </p>
 
-
-
                   {/* WORKER */}
                   <div className="flex items-center gap-2.5">
 
-                    {/* PROFILE */}
                     <div className="w-8 h-8 rounded-full bg-gradient-to-br from-pink-500 to-purple-500 flex items-center justify-center shadow-sm">
 
                       <User
@@ -393,9 +420,6 @@ const WorkersDistribution = () => {
 
                     </div>
 
-
-
-                    {/* INFO */}
                     <div className="flex-1">
 
                       <p className="text-[12px] font-semibold text-[#1f1f3d]">
@@ -404,9 +428,6 @@ const WorkersDistribution = () => {
 
                       </p>
 
-
-
-                      {/* PROGRESS */}
                       <div className="w-full h-[4px] rounded-full bg-[#ece8f6] mt-1.5 overflow-hidden">
 
                         <div
@@ -423,36 +444,28 @@ const WorkersDistribution = () => {
 
                   </div>
 
-
-
                   {/* TAGS */}
                   <p className="text-[12px] font-semibold text-[#1f1f3d]">
 
-                    {
-                      worker.distributed
-                    }
+                    {worker.distributed.toLocaleString()}
 
                   </p>
-
-
 
                   {/* PERCENT */}
                   <p className="text-[12px] font-semibold text-[#8f8fa8]">
 
-                    {
-                      worker.percentage
-                    }
+                    {worker.percentage}
 
                   </p>
 
                 </div>
 
               )
-            )
+            )}
 
-          )}
+          </div>
 
-        </div>
+        )}
 
       </div>
 

@@ -84,12 +84,14 @@ const StatsCards = () => {
       },
 
       {
-        title: "Active Workers",
+        title: "Workers",
 
-        value: 15,
+        value: 0,
+
+        totalWorkers: 0,
 
         subtitle:
-          "100% active",
+          "0 Workers",
 
         icon: Users,
 
@@ -100,7 +102,7 @@ const StatsCards = () => {
           "bg-orange-400",
 
         progressWidth:
-          "100%",
+          "0%",
       },
     ]);
 
@@ -138,14 +140,16 @@ const StatsCards = () => {
           }
 
           // =====================================
-          // FETCH BOTH APIS
+          // FETCH APIS
           // =====================================
           const [
             totalResponse,
             distributedResponse,
+            summaryResponse,
           ] = await Promise.all([
+
             fetch(
-              "https://sewac-helper-admin-portal.onrender.com/api/dashboard/total-rfid-tags",
+              "http://18.60.41.32:5000/api/dashboard/total-rfid-tags",
               {
                 method: "GET",
 
@@ -158,7 +162,20 @@ const StatsCards = () => {
             ),
 
             fetch(
-              "https://sewac-helper-admin-portal.onrender.com/api/dashboard/distributed-tags",
+              "http://18.60.41.32:5000/api/dashboard/distributed-tags",
+              {
+                method: "GET",
+
+                headers: {
+                  Authorization: `Bearer ${token}`,
+                  "Content-Type":
+                    "application/json",
+                },
+              }
+            ),
+
+            fetch(
+              "http://18.60.41.32:5000/api/logs/summary",
               {
                 method: "GET",
 
@@ -176,7 +193,8 @@ const StatsCards = () => {
           // =====================================
           if (
             !totalResponse.ok ||
-            !distributedResponse.ok
+            !distributedResponse.ok ||
+            !summaryResponse.ok
           ) {
 
             console.error(
@@ -195,6 +213,9 @@ const StatsCards = () => {
           const distributedData =
             await distributedResponse.json();
 
+          const summaryData =
+            await summaryResponse.json();
+
           console.log(
             "TOTAL RFID:",
             totalData
@@ -203,6 +224,11 @@ const StatsCards = () => {
           console.log(
             "DISTRIBUTED RFID:",
             distributedData
+          );
+
+          console.log(
+            "SUMMARY:",
+            summaryData
           );
 
           // =====================================
@@ -219,6 +245,14 @@ const StatsCards = () => {
           const remainingRFID =
             totalRFID -
             distributedRFID;
+
+          const activeWorkers =
+            summaryData?.data
+              ?.activeWorkers || 0;
+
+          const totalWorkers =
+            summaryData?.data
+              ?.totalWorkers || activeWorkers;
 
           // =====================================
           // PERCENTAGES
@@ -237,6 +271,15 @@ const StatsCards = () => {
               ? Math.round(
                   (remainingRFID /
                     totalRFID) *
+                    100
+                )
+              : 0;
+
+          const activeWorkerPercentage =
+            totalWorkers > 0
+              ? Math.round(
+                  (activeWorkers /
+                    totalWorkers) *
                     100
                 )
               : 0;
@@ -311,12 +354,16 @@ const StatsCards = () => {
 
             {
               title:
-                "Active Workers",
+                "Workers",
 
-              value: 15,
+              value:
+                activeWorkers,
+
+              totalWorkers:
+                totalWorkers,
 
               subtitle:
-                "100% active",
+                `${activeWorkers} current workers`,
 
               icon: Users,
 
@@ -326,8 +373,7 @@ const StatsCards = () => {
               progress:
                 "bg-orange-400",
 
-              progressWidth:
-                "100%",
+              progressWidth: `${activeWorkerPercentage}%`,
             },
           ]);
 
@@ -503,7 +549,7 @@ const StatsCards = () => {
 
                     {card.title ===
                     "Active Workers"
-                      ? `${counts[index]} / 15`
+                      ? `${counts[index]} / ${statsData[index].totalWorkers}`
                       : counts[
                           index
                         ].toLocaleString()}
@@ -554,6 +600,7 @@ const StatsCards = () => {
       )}
 
     </div>
+
   );
 };
 

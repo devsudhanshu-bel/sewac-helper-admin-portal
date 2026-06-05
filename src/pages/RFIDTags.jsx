@@ -80,7 +80,7 @@ const RFIDTags = () => {
 
           const response =
             await fetch(
-              "https://sewac-helper-admin-portal.onrender.com/api/rfid/all",
+              "http://18.60.41.32:5000/api/rfid/all",
               {
                 method: "GET",
 

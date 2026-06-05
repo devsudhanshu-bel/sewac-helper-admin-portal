@@ -8,11 +8,8 @@ import DistributionProgress from "../components/charts/DistributionProgress";
 
 import WorkersDistribution from "../components/charts/WorkersDistribution";
 
-import DistributionByWorkers from "../components/charts/DistributionByWorkers";
-
 import DistributionOverTime from "../components/charts/DistributionOverTime";
 
-import LiveDistributionFeed from "../components/charts/LiveDistributionFeed";
 
 
 
@@ -56,20 +53,15 @@ const Dashboard = () => {
       {/* ========================================= */}
       {/* SECOND ANALYTICS SECTION */}
       {/* ========================================= */}
-      <div className="grid grid-cols-3 gap-4 mt-4">
+      <div className="grid grid-cols-1 gap-4 mt-4">
 
-        {/* PIE CHART */}
-        <DistributionByWorkers />
+
 
 
 
         {/* BAR CHART */}
         <DistributionOverTime />
 
-
-
-        {/* LIVE FEED */}
-        <LiveDistributionFeed />
 
       </div>
 
