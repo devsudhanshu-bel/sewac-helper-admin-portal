@@ -1,0 +1,518 @@
+a) login:
+
+Regular: http://localhost:5000/api/admin/login
+render: https://sewac-helper-admin-portal.onrender.com/api/admin/login
+
+{
+  "username": "sewac",
+  "password": "admin@sewac2026"
+}
+
+
+
+b) dashboard:
+
+1)card1 (total tags)
+regular: http://localhost:5000/api/dashboard/total-rfid-tags
+render: https://sewac-helper-admin-portal.onrender.com/api/dashboard/total-rfid-tags
+EC2:http://18.60.41.32:5000/api/dashboard/total-rfid-tags
+
+
+2)card2 (total distributed tgas):
+Every RFID row having phoneNumber= Distributed RFID Tag (from RFIDMapping table: when assigned)
+
+regular: http://localhost:5000/api/dashboard/distributed-tags
+render:https://sewac-helper-admin-portal.onrender.com/api/dashboard/distributed-tags
+
+
+
+3)card (Tags Distributed by Workers”):
+1 row = 2 RFID tags distributed
+because every citizen receives:
+1 Wet RFID
+1 Dry RFID
+
+So:
+
+distributedTags = count(workerId rows) × 2
+
+regular: http://localhost:5000/api/dashboard/worker-distribution
+render:https://sewac-helper-admin-portal.onrender.com/api/dashboard/worker-distribution
+
+
+
+c)RFID tags page:
+1)Initially keeps all the RFIDS displaed
+2)will be set to unmapped
+
+regular: http://localhost:5000/api/rfid/all
+render:  https://sewac-helper-admin-portal.onrender.com/api/rfid/all
+
+
+d)LOG page:
+1) Logs page top cards:
+
+TABLE USED:
+RFIDMapping
+
+LOGIC:
+For every RFID row:
+
+Condition:	                        Result
+phoneNumber = null OR wasteType = null	UNMAPPED
+phoneNumber exists AND wasteType exists	MAPPED
+
+
+Regular: http://localhost:5000/api/logs/all
+Render: https://sewac-helper-admin-portal.onrender.com/api/logs/all
+
+2)LOG SUMMARY ENDPOINT:
+
+Card		Logic
+Total Logs	COUNT(*)
+Today's Logs	createdAt = today
+Active Workers	DISTINCT workerId
+Latest Log	latest createdAt
+
+Regular: http://localhost:5000/api/logs/summary
+Render: https://sewac-helper-admin-portal.onrender.com/api/logs/summary
+
+///////////////////////////////////////////////
+
+Here are all API endpoints with Railway added:
+
+## a) Login
+
+**Local:** `http://localhost:5000/api/admin/login`
+**Render:** `https://sewac-helper-admin-portal.onrender.com/api/admin/login`
+**Railway:** `https://sewac-helper-admin-portal-production.up.railway.app/api/admin/login`
+
+Body:
+```json
+
+{
+
+\\\\\\\&#x20; "username": "sewac",
+
+\\\\\\\&#x20; "password": "admin@sewac2026"
+
+}
+
+```
+
+---
+
+## b) Dashboard
+
+**Total RFID Tags (Card 1)**
+
+- Local: `http://localhost:5000/api/dashboard/total-rfid-tags`
+- Render: `https://sewac-helper-admin-portal.onrender.com/api/dashboard/total-rfid-tags`
+- Railway: `https://sewac-helper-admin-portal-production.up.railway.app/api/dashboard/total-rfid-tags`
+
+**Distributed Tags**
+
+- Local: `http://localhost:5000/api/dashboard/distributed-tags`
+- Render: `https://sewac-helper-admin-portal.onrender.com/api/dashboard/distributed-tags`
+- Railway: `https://sewac-helper-admin-portal-production.up.railway.app/api/dashboard/distributed-tags`
+
+**Worker Distribution**
+
+- Local: `http://localhost:5000/api/dashboard/worker-distribution`
+- Render: `https://sewac-helper-admin-portal.onrender.com/api/dashboard/worker-distribution`
+- Railway: `https://sewac-helper-admin-portal-production.up.railway.app/api/dashboard/worker-distribution`
+
+---
+
+## c) RFID
+
+**All RFID Tags**
+
+- Local: `http://localhost:5000/api/rfid/all`
+- Render: `https://sewac-helper-admin-portal.onrender.com/api/rfid/all`
+- Railway: `https://sewac-helper-admin-portal-production.up.railway.app/api/rfid/all`
+
+---
+
+## d) Logs
+
+**All Logs**
+
+- Local: `http://localhost:5000/api/logs/all`
+- Render: `https://sewac-helper-admin-portal.onrender.com/api/logs/all`
+- Railway: `https://sewac-helper-admin-portal-production.up.railway.app/api/logs/all`
+
+**Logs Summary**
+
+- Local: `http://localhost:5000/api/logs/summary`
+- Render: `https://sewac-helper-admin-portal.onrender.com/api/logs/summary`
+- Railway: `https://sewac-helper-admin-portal-production.up.railway.app/api/logs/summary`
+
+---
+
+newly created:
+https://sewac-helper-admin-portal.onrender.com/api/logs/daily-counts
+
+
+Good point. Before touching any more endpoints, you should freeze and document the logic you've already standardized.
+
+---
+
+# 1. `/api/dashboard/distributed-tags`
+
+### Source Table
+
+```text
+
+TrackingLog
+
+```
+
+### Source Columns
+
+```text
+
+status
+
+drySlno
+
+wetSlno
+
+```
+
+### Business Rule
+
+Count only RFIDs that were successfully distributed.
+
+A tag is considered distributed when:
+
+```text
+
+status = FOUND
+
+```
+
+and RFID value is valid:
+
+```text
+
+NOT NULL
+
+NOT "NULL"
+
+NOT "N/A"
+
+NOT ""
+
+```
+
+### Counting Logic
+
+For each TrackingLog row:
+
+```js
+
+if (status === "FOUND") {
+
+
+
+\\\\\\\&#x20;  if (isValidRFID(drySlno))
+
+\\\\\\\&#x20;     distributedTags++;
+
+
+
+\\\\\\\&#x20;  if (isValidRFID(wetSlno))
+
+\\\\\\\&#x20;     distributedTags++;
+
+
+
+}
+
+```
+
+### Example
+
+| drySlno | wetSlno | status |
+| ------- | ------- | ------ |
+| 1208    | 1339    | FOUND  |
+
+Counts as:
+
+```text
+
+2 distributed tags
+
+```
+
+---
+
+| drySlno | wetSlno | status |
+| ------- | ------- | ------ |
+| 1208    | NULL    | FOUND  |
+
+Counts as:
+
+```text
+
+1 distributed tag
+
+```
+
+---
+
+| drySlno | wetSlno | status    |
+| ------- | ------- | --------- |
+| NULL    | NULL    | NOT_FOUND |
+
+Counts as:
+
+```text
+
+0
+
+```
+
+---
+
+# 2. `/api/logs/daily-counts`
+
+### Source Table
+
+```text
+
+TrackingLog
+
+```
+
+### Source Columns
+
+```text
+
+createdAt
+
+status
+
+drySlno
+
+wetSlno
+
+```
+
+### Business Rule
+
+For each day:
+
+```text
+
+count number of RFID tags distributed
+
+```
+
+NOT
+
+```text
+
+count rows
+
+```
+
+and NOT
+
+```text
+
+count citizens
+
+```
+
+### Logic
+
+For every TrackingLog row:
+
+```js
+
+if (status === "FOUND") {
+
+
+
+\\\\\\\&#x20;  if (isValidRFID(drySlno))
+
+\\\\\\\&#x20;     dailyCounts\\\\\\\\\\\\\\\[date]++;
+
+
+
+\\\\\\\&#x20;  if (isValidRFID(wetSlno))
+
+\\\\\\\&#x20;     dailyCounts\\\\\\\\\\\\\\\[date]++;
+
+
+
+}
+
+```
+
+### Result
+
+```json
+
+\\\\\\\\\\\\\\\[
+
+\\\\\\\&#x20; {
+
+\\\\\\\&#x20;   "date": "2026-05-18",
+
+\\\\\\\&#x20;   "count": 56
+
+\\\\\\\&#x20; }
+
+]
+
+```
+
+means
+
+```text
+
+56 RFID tags distributed
+
+on 18-May
+
+```
+
+NOT
+
+```text
+
+56 scans
+
+```
+
+NOT
+
+```text
+
+56 citizens
+
+```
+
+---
+
+# Relationship Between These Two Endpoints
+
+They should ALWAYS satisfy:
+
+```text
+
+SUM(daily-counts)
+
+=
+
+distributed-tags
+
+```
+
+Example:
+
+```text
+
+18-May = 56
+
+19-May = 107
+
+20-May = 79
+
+...
+
+27-May = 59
+
+\\\\\\\\----------------
+
+Total = 1202
+
+```
+
+Then:
+
+```json
+
+{
+
+\\\\\\\&#x20; "distributedTags": 1202
+
+}
+
+```
+
+must match.
+
+And currently yours does.
+
+So these two endpoints are now internally consistent.
+
+---
+
+# What To Fix Next
+
+The next endpoint should be:
+
+```text
+
+/api/dashboard/worker-distribution
+
+```
+
+Reason:
+
+Current migration status:
+
+| Feature             | Source                        |
+| ------------------- | ----------------------------- |
+| Distributed Tags    | TrackingLog ✅                 |
+| Daily Counts Graph  | TrackingLog ✅                 |
+| Worker Count        | Moderator ✅                   |
+| Worker Distribution | Mixed / needs verification ⚠️ |
+
+---
+
+Worker Distribution should use the exact same RFID counting rule:
+
+```js
+
+status === "FOUND"
+
+
+
+\\\\\\\\+ valid drySlno
+
+
+
+\\\\\\\\+ valid wetSlno
+
+```
+
+grouped by:
+
+```js
+
+workerId
+
+```
+
+so that:
+
+```text
+
+Sum(all workers distributedTags)
+
+=
+
+dashboard distributedTags
+
+=
+
+sum(daily-counts)
+
+```
+
+That should be the next endpoint to migrate and verify before touching Logs page or RFID pages.
