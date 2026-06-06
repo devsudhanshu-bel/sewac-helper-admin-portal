@@ -9,6 +9,10 @@ import {
   ScanLine,
 } from "lucide-react";
 
+import {
+  ShieldCheck,
+} from "lucide-react";
+
 import { NavLink } from "react-router-dom";
 
 import gsap from "gsap";
@@ -32,6 +36,12 @@ const menuItems = [
     name: "RFID Tags",
     icon: ScanLine,
     path: "/rfid-tags",
+  },
+
+  {
+    name: "Add/View Moderators",
+    icon: ShieldCheck,
+    path: "/moderators",
   },
 ];
 

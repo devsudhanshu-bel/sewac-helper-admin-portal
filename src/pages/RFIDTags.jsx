@@ -159,12 +159,6 @@ const RFIDTags = () => {
             searchTerm.toLowerCase()
           ) ||
 
-        item?.rfid
-          ?.toLowerCase()
-          ?.includes(
-            searchTerm.toLowerCase()
-          ) ||
-
         item?.slno
           ?.toString()
           ?.includes(searchTerm);
@@ -372,7 +366,7 @@ const RFIDTags = () => {
               setCurrentPage(1);
             }}
 
-            placeholder="Search SL No, RFID or Phone..."
+            placeholder="Search SL No or Phone Number"
 
             className="
             w-[320px]

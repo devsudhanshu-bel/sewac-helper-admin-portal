@@ -492,7 +492,7 @@ console.log(
 
     <div
       ref={pageRef}
-      className="min-h-screen bg-[#f5f7fb] px-1 pt-1 pb-8"
+      className="w-full min-w-0 bg-[#f5f7fb] px-1 pt-1 pb-8"
     >
 
       {/* HEADER */}
@@ -718,11 +718,11 @@ overflow-hidden
         {/* TABLE HEADER */}
         <div className="overflow-x-auto w-full">
 
-          <div className="min-w-[1200px]">
+          <div className="min-w-max">
 
             <div className="bg-slate-100 border-b border-slate-200">
 
-              <div className="grid grid-cols-[80px_280px_180px_180px_220px_220px_200px]">
+              <div className="grid grid-cols-[80px_2fr_1fr_1fr_1fr_1.2fr_1fr]">
 
                 <div className="px-6 py-4 text-[12px] font-bold text-slate-600">
                   #
@@ -788,7 +788,7 @@ overflow-hidden
 
                       className="
 grid
-grid-cols-[80px_280px_180px_180px_220px_220px_200px]
+grid-cols-[80px_2fr_1fr_1fr_1fr_1.2fr_1fr]
 
 border-b
 border-slate-100
