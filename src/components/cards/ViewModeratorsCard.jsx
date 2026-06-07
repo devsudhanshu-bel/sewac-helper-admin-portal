@@ -1,3 +1,4 @@
+import API_BASE_URL from "../../services/api";
 import { useEffect, useState } from "react";
 
 const ViewModeratorsCard = () => {
@@ -11,7 +12,7 @@ const ViewModeratorsCard = () => {
         const token = sessionStorage.getItem("token");
 
         const response = await fetch(
-          "http://18.60.41.32:5000/api/moderators/all",
+          `${API_BASE_URL}/api/moderators/all`,
           {
             method: "GET",
 

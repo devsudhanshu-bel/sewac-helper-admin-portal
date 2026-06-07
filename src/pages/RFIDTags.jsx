@@ -1,3 +1,4 @@
+import API_BASE_URL from "../services/api";
 import React, {
   useEffect,
   useRef,
@@ -80,7 +81,7 @@ const RFIDTags = () => {
 
           const response =
             await fetch(
-              "http://18.60.41.32:5000/api/rfid/all",
+              `${API_BASE_URL}/api/rfid/all`,
               {
                 method: "GET",
 

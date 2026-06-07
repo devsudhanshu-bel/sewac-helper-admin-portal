@@ -1,3 +1,4 @@
+import API_BASE_URL from "../../services/api";
 import React, { useEffect, useRef, useState } from "react";
 
 import gsap from "gsap";
@@ -81,7 +82,7 @@ const DistributionProgress = () => {
         const [totalResponse, distributedResponse, dailyCountsResponse] =
           await Promise.all([
             fetch(
-              "http://18.60.41.32:5000/api/dashboard/total-rfid-tags",
+              `${API_BASE_URL}/api/dashboard/total-rfid-tags`,
               {
                 method: "GET",
 
@@ -93,7 +94,7 @@ const DistributionProgress = () => {
             ),
 
             fetch(
-              "http://18.60.41.32:5000/api/dashboard/distributed-tags",
+              `${API_BASE_URL}/api/dashboard/distributed-tags`,
               {
                 method: "GET",
 
@@ -105,7 +106,7 @@ const DistributionProgress = () => {
             ),
 
             fetch(
-              "http://18.60.41.32:5000/api/logs/daily-counts",
+              `${API_BASE_URL}/api/logs/daily-counts`,
               {
                 method: "GET",
                 headers: {

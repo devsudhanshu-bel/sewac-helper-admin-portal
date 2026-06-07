@@ -1,3 +1,4 @@
+import API_BASE_URL from "../../services/api";
 import React, {
   useEffect,
   useRef,
@@ -65,7 +66,7 @@ const WorkersDistribution = () => {
           // =====================================
           const response =
             await fetch(
-              "http://18.60.41.32:5000/api/dashboard/worker-distribution",
+              `${API_BASE_URL}/api/dashboard/worker-distribution`,
               {
                 method: "GET",
 

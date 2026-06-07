@@ -1,3 +1,4 @@
+import API_BASE_URL from "../services/api";
 import {
   User,
   Lock,
@@ -289,7 +290,7 @@ const Login = () => {
 
         const response =
           await fetch(
-            "http://18.60.41.32:5000/api/admin/login",
+            `${API_BASE_URL}/api/admin/login`,
             {
               method: "POST",
 

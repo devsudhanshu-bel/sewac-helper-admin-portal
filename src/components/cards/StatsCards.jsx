@@ -1,3 +1,4 @@
+import API_BASE_URL from "../../services/api";
 import React, {
   useEffect,
   useRef,
@@ -149,7 +150,7 @@ const StatsCards = () => {
           ] = await Promise.all([
 
             fetch(
-              "http://18.60.41.32:5000/api/dashboard/total-rfid-tags",
+              `${API_BASE_URL}/api/dashboard/total-rfid-tags`,
               {
                 method: "GET",
 
@@ -162,7 +163,7 @@ const StatsCards = () => {
             ),
 
             fetch(
-              "http://18.60.41.32:5000/api/dashboard/distributed-tags",
+              `${API_BASE_URL}/api/dashboard/distributed-tags`,
               {
                 method: "GET",
 
@@ -175,7 +176,7 @@ const StatsCards = () => {
             ),
 
             fetch(
-              "http://18.60.41.32:5000/api/logs/summary",
+              `${API_BASE_URL}/api/logs/summary`,
               {
                 method: "GET",
 

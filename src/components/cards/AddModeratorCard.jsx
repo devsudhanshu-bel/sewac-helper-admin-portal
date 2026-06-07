@@ -1,3 +1,4 @@
+import API_BASE_URL from "../../services/api";
 import { useState, useEffect, useRef } from "react";
 import gsap from "gsap";
 
@@ -40,7 +41,7 @@ const AddModeratorCard = () => {
       const token = sessionStorage.getItem("token");
 
       const response = await fetch(
-        "http://18.60.41.32:5000/api/moderators/create",
+        `${API_BASE_URL}/api/moderators/create`,
         {
           method: "POST",
 

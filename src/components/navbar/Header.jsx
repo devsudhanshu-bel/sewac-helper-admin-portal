@@ -1,3 +1,4 @@
+import API_BASE_URL from "../../services/api";
 import React, { useEffect, useRef, useState } from "react";
 
 import { CalendarDays, Download } from "lucide-react";
@@ -34,7 +35,7 @@ const Header = () => {
       const token = sessionStorage.getItem("token");
 
       const response = await fetch(
-        "http://18.60.41.32:5000/api/dashboard/worker-distribution",
+        `${API_BASE_URL}/api/dashboard/worker-distribution`,
         {
           method: "GET",
 

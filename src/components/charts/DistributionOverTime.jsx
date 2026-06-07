@@ -1,7 +1,7 @@
 // =========================================
 // src/components/charts/DistributionOverTime.jsx
 // =========================================
-
+import API_BASE_URL from "../../services/api";
 import {
   BarChart,
   Bar,
@@ -98,7 +98,7 @@ const DistributionOverTime = () => {
 
           const response =
             await fetch(
-              "http://18.60.41.32:5000/api/dashboard/worker-distribution",
+              `${API_BASE_URL}/api/dashboard/worker-distribution`,
               {
                 method: "GET",
 

@@ -1,3 +1,4 @@
+import API_BASE_URL from "../services/api";
 import React, {
   useEffect,
   useRef,
@@ -85,7 +86,7 @@ const [workers, setWorkers] =
 
           const response =
             await fetch(
-              "http://18.60.41.32:5000/api/logs/summary",
+              `${API_BASE_URL}/api/logs/summary`,
               {
                 method: "GET",
 
@@ -161,7 +162,7 @@ const [workers, setWorkers] =
 
           const response =
             await fetch(
-              "http://18.60.41.32:5000/api/logs/all?limit=-1",
+              `${API_BASE_URL}/api/logs/all?limit=-1`,
               {
                 method: "GET",
 
